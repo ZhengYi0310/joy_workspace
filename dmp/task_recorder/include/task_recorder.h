@@ -16,17 +16,25 @@
 
 // ros includes 
 #include <ros/ros.h>
+#include <filters/transfer_function.h>
 
 #include <usc_utilities/param_server.h>
 #include <usc_utilities/assert.h>
 #include <usc_utilities/bspline.h>
+#include <usc_utilities/logging.h>
 
 // local includes 
+#include <task_recorder_utilities/message_buffer.h>
+#include <task_recorder_utilities/message_ring_buffer.h>
+#include <task_recorder_utilities/data_sample_utilities.h>
+#include <task_recorder_utilities/task_description_utilities.h>
+#include <task_recorder_utilities/task_recorder_utilities.h>
+
+#include <task_recorder/Description.h>
+#include <task_recorder/DataSample.h>
 #include <task_recorder/task_recorder_io.h>
-#include <task_recorder/task_recorder_utilities.h>
-#include <task_recorder/StartRecording.h>
-#include <task_recorder/accumulator.h>
-#include <task_recorder/AccumulatedTrialStatistics.h>
+#include <task_recorder/task_recorder_base.h>
+
 
 namespace task_recorder 
 {

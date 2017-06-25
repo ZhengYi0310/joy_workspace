@@ -35,4 +35,4 @@
     <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltask_recorder"/>
   </export>
 
-</package
+</package>

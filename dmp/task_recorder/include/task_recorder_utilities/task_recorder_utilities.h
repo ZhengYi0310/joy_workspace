@@ -122,7 +122,7 @@ namespace task_recorder_utilities
         return checkForDirectory(boost::filesystem::path(directory_name), create_if_nonexistent);
     }
 
-    inline bool checkAndCreateDirectory(const std::string& directory_name, bool create_if_nonexistent = true)
+    inline bool checkAndCreateDirectories(const std::string& directory_name, bool create_if_nonexistent = true)
     {
         try
         {
