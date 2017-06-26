@@ -38,7 +38,7 @@ namespace task_recorder
     static const int ROS_TIME_OFFSET = 1340100000;
 
     // default template parameters
-    template<class MessageType = = task_recorder::DataSample>
+    template<class MessageType = task_recorder::DataSample>
     class TaskRecorderIO
     {
         public:
@@ -109,7 +109,16 @@ namespace task_recorder
              * @return True on success, otherwise False
              */
             bool getAbsFileName(const task_recorder::Description& description,
-                                std::vector<MessageType>& msgs);
+                                std::string& abs_file_name);
+
+            /*!
+             * @param description
+             * @param data_samples
+             * @return True on success, otherwise False
+             */
+            bool readDataSamples(const task_recorder::Description& description,
+                                 std::vector<MessageType>& msgs);
+            
 
             /*!
              * @param descriptions
@@ -189,110 +198,214 @@ description_ = description;
             // check whether the directory exists, if not, create it 
             absolute_path_directory_path_ = boost::filesystem::path(data_directory_name_ + task_recorder_utilities::getFilename(description_));
             boost::filesystem::path path = absolute_path_directory_path_;
+            if (!directory_name.empty())
+            {
+                path = boost::filesystem::path(absolute_data_directory_path_.string() + std::string("/") + directory_name);
+            }
+            ROS_VERIFY(task_recorder2_utilities::checkForDirectory(path));
+            ROS_VERIFY(task_recorder2_utilities::getTrialId(path, description_.trial, prefixed_topic_name_));
+            ROS_VERIFY(task_recorder2_utilities::checkForCompleteness(path, description_.trial, prefixed_topic_name_));
+            ROS_DEBUG("Setting trial to >%i<.", decription_.trial);
+        }
+        else 
+        {
+            boost::filesystem::path path = boost::filesystem::path(data_directory_name_);
+            ROS_VERIFY(task_recorder2_utilities::checkForDirectory(path));
+            absolute_data_directory_path_ = boost::filesystem::path(data_directory_name_ + task_recorder2_utilities::getBagFileName(description_));
         }
     }
 
     template<class MessageType>
-    TaskRecorderIO<MessageType>::checkForDirectory()
+    void TaskRecorderIO<MessageType>::setResampledDescription(const task_recorder::Description& description,
+                                                              const std::string directory_name)
     {
-        // check for the directory, if not, create it 
-        if (boost::filesystem::exists(absolute_path_directory_path_))
+        setDescription(description, directory_name);
+    }
+
+    template<class MessageType>
+    task_recorder::Description TaskRecorderIO<MessageType>::getDescription() const
+    {
+        ROS_ASSERT_MSG(initialized_, "Task recorder IO module is not initialized.");
+        return description_;
+    }
+
+    template<class MessageType>
+    bool TaskRecorderIO<MessageType>::writeRecordedData(const std::string directory_name,
+                                                        bool increment_trial_counter)
+    {
+        ROS_ASSERT_MSG(initialized_, "Task recorder IO module is not initialized.");
+
+        if (create_directories_)
         {
-            return true;
+            std::string file_name = task_recorder_utilities::getPathNameIncludingTrailingSlash(absolute_path_directory_path_);
+            bool::filesystem::path path = absolute_path_directory_path_;
+
+            if (!directory_name.empty())
+            {
+                file_name.append(directory_name);
+                path = boost::filesystem::path(absolute_data_directory_path_.string() + std::string("/") + directory_name);
+                ROS_VERIFY(task_recorder_utilities::checkForDirectory(file_name));
+                usc_utilities::appendTrailingSlash(file_name);
+            }
+            file_name.append(task_recorder_utilities::getDataFileName(prefixed_topic_name_, description_.trial));
+            ROS_VERIFY(usc_utilities::FileIO<MessageType>::writeToBagFileWithTimeStamps(messages_, topic_name_, file_name, false));
+            if (increment_trial_counter)
+            {
+                ROS_VERIFY(task_recorder_utilities::incrementTrialCounterFile(path, prefixed_topic_name_));
+                ROS_VERIFY(task_recorder_utilities::getTrialId(path, description_.trial, prefixed_topic_name_));
+                ROS_VERIFY(task_recorder_utilities::checkForCompleteness(path, description_.trial, prefixed_topic_name_));
+            }
         }
 
         else 
         {
-            if (!boost::filesystem::create_directory(absolute_path_directory_path_))
-            {
-                ROS_ERROR_STREAM("Could not create directory " << absolute_path_directory_path_.filename() << " :" << std::strerror(errno));
-                return false;
-            }
+            std::string file_name = absolute_data_directory_path_.file_string();
+            ROS_VERIFY(usc_utilities::FileIO<MessageType>::writeToBagFileWithTimeStamps(messages_, topic_name_, file_name, false));
         }
         return true;
     }
 
     template<class MessageType>
-    bool TaskRecorderIO<MessageType>::writeRecordedData()
+    bool TaskRecorderIO<MessageType>::getAbsFileName(const task_recorder::Description& description,
+                                                     std::string& abs_file_name)
     {
-        std::string file_name = getPathNameIncludingTrailingSlash(absolute_path_directory_path_) + getDataFileName(topic_name_, trial_);
-
-        ROS_INFO("Writting data to >%s<.", file_name.c_str());
-        try 
-        {
-            rosbag::Bag bag;
-            bag.open(file_name, rosbag::bagmode::Write);
-            for (int i = 0; i < static_cast<int>(messsages_.size()); i++)
-            {
-                bag.write(file_name, messsages_[i].header.stamp, messsages_[i]);
-            }
-            bag.close();
-        }
-        catch (rosbag::BagIOException ex)
-        {
-            ROS_ERROR("Problem when writing to bag file named %s!", file_name.c_str());
-            return false;
-        }
-        
-        if (!incrementTrialCounterFile(absolute_path_directory_path_, topic_name_))
-        {
-            ROS_ERROR("Can't increase the trial counter!");
-            return false;
-        }
-
-        ROS_VERIFY(getTrialId(absolute_path_directory_path_, trial_, topic_name_));
-        ROS_VERIFY(checkForCompleteness(absolute_path_directory_path_, trial_, topic_name_));
+        boost::filesystem::path path = boost::filesystem::path(data_directory_name_ + task_recorder_utilities::getFilename(description));
+        abs_file_name = task_recorder_utilities::getPathNameIncludingTrailingSlash(path);
+        abs_file_name.append(task_recorder_utilities::getDataFileName(prefixed_topic_name_, description.trial));
         return true;
+    }
+
+    template<class MessageType>
+    bool TaskRecorderIO<MessageType>:readDataSamples(const task_recorder::Description& description,
+                                                     std::vector<MessageType>& msgs)
+    {
+        std::string abs_file_name;
+        if (!getAbsFileName(description, abs_file_name))
+        {
+            ROS_ERROR("Could not get file name of >%s<.", task_recorder_utilities::getFilename(description).c_str());
+            return false;
+        }
+        if (!usc_utilities::FileIO<MessageType>::readFromBagFile(msgs, topic_name_, abs_file_name, false))
+        {
+            ROS_ERROR("Could not read data samples in >%s<.", abs_file_name.c_str());
+            return false;
+        }
+        return true;
+    }
+
+    template<class MessageType>
+    bool TaskRecorderIO<MessageType>::writeRecordedDataToCLMCFile(const std::string directory_name)
+    {
+        ROS_ASSERT_MSG(initialized_, "Task recorder IO module is not initialized.");
+        ROS_ASSERT_MSG(!messages_.empty(), "Messages are empty. Cannot write anything to CLMC file.");
+        if (create_directories_)
+        {
+            std::string file_name = task_recorder_utilities::getPathNameIncludingTrailingSlash(absolute_path_directory_path_);
+            boost::filesystem::path path = absolute_path_directory_path_;
+
+            if (!directory_name.empty())
+            {
+                file_name.append(directory_name);
+                path = boost::filesystem::path(absolute_data_directory_path_.directory_string() + std::string("/") + directory_name);
+                ROS_VERIFY(task_recorder_utilities::checkForDirectory(file_name));
+                usc_utilities::appendTrailingSlash(file_name);
+            }
+            std::string clmc_file_name;
+            ROS_VERIFY(task_recorder_utilities::setCLMCFileName(decription_.trial - 1));
+            file_name.append(clmc_file_name);
+            const int trajectory_length = (int)messsages_.size();
+            double trajectory_duration = (messsages_[trajectory_length - 1].header.stamp - messsages_[0].header.stamp).toSec();
+            if (trajectory_length == 1)
+            {
+                ROS_WARN("Only 1 data sample is contained  when writing out the clmc data file.");
+                trajectory_duration = 1.0;
+            }
+
+            ROS_ASSERT_MSG(trajectory_duration > 0.0, "Trajectory duration >%f< of trajectory named >%s< must be possitive.", trajectory_duration, file_name.c_str());
+            const double SAMPLING_FREQUENCY = (double)trajectory_length / trajectory_duration;
+            boost::shared_ptr<dmp_lib::Trajectory> trajectory(new dmp_lib::Trajectory());
+            std::vector<std::string> variable_names;
+            variable_names.push_back("ros_time");
+            variable_names.insert(variable_names.end(), messsages_[0].names.begin(), messsages_[0].names.end());
+            ROS_VERIFY(trajectory->initialize(variable_names, SAMPLING_FREQUENCY, true, trajectory_length));
+
+            for (int i = 0; i < trajectory_length; i++)
+            {
+                std::vector<double> data;
+                data.push_back(static_cast<double>(messages_[i].header.stamp.toSec()));
+                data.insert(data.end(), messages_[i].data.begin(), messages_[i].data.end());
+                ROS_VERIFY(trajectory->add(data, true));
+            }
+
+            ROS_VERIFY(trajectory->writeToCLMCFile(file_name, true));
+        }
+        else
+        {
+            ROS_ERROR("Cannot write CLMC file when \"create_directories\" is disabled.");
+            return false;
+        }
+        return true;
+    }
+
+    template<class MessageType>
+    bool TaskRecorderIO<MessageType>::writeResampledData()
+    {
+        return writeRecordedData(std::string("resampled"), true);
+    }
+
+    template<class MessageType>
+    bool TaskRecorderIO<MessageType>::writeRecordedDataSamples()
+    {
+        return writeRecordedData(std::string(""), true);
+    }
+    
+    template<class MessageType>
+    bool TaskRecorderIO<MessageType>::writeRawData(const std::string raw_directory_name)
+    {
+        return writeRecordedData(raw_directory_name, false);
     }
 
     template<class MessageType>
     bool TaskRecorderIO<MessageType>::writeRawData()
     {
-        std::string directory_name = getPathNameIncludingTrailingSlash(absolute_path_directory_path_) + std::string("raw");
-        boost::filesystem::path directory_path = boost::filesystem::path(directory_name);
-        if (!boost::filesystem::exists(directory_path))
-        {
-            if (!boost::filesystem::create_directory(directory_path))
-            {
-                ROS_ERROR_STREAM("Could not create directory " << directory_path.filename() << " :" << std::strerror(errno));
-                return false;
-            }
-        }
-
-        std::string file_name = directory_name + std::string("/") + getDataFileName(topic_name_, trial_);
-
-        return usc_utilities::FileIO<MessageType>::writeToBagFileWithTimeStamps(messsages_, topic_name_, file_name);
-
-        return true;
+        return writeRecordedData(std::string("raw"), false);
     }
-
-    template<class MessageType>
-    bool TaskRecorderIO<MessageType>::writeStatistics(std::vector<std::vector<task_recorder::AccumulatedTrialStatistics> >& accumulated_trial_stats_vec)
+    
+    template<class MessageType> 
+    bool TaskRecorderIO<MessageType>::writeStatistics(std::vector<std::vector<task_recorder::AccumulatedTrialStatistics> >& accumulated_trial_stats_vec);
     {
-        std::string file_name = getPathNameIncludingTrailingSlash(absolute_path_directory_path_) + getStatFileName(topic_name_, trial_);
+        ROS_ASSERT_MSG(initialized_, "Task recorder IO module is not initialized.");
+        std::string file_name = task_recorder_utilities::getPathNameIncludingTrailingSlash(absolute_data_directory_path_) + task_recorder_utilities::getStatFileName(prefixed_topic_name_, description_.trial);
 
         try 
         {
             rosbag::Bag bag;
-            bag.open(file_name, rosbag:;bagmode::Write);
-            for (int i = 0; i < static<int>(accumulated_trial_stats_vec.size()); i++)
+            bag.open(file_name, rosbag::bagmode::Write);
+
+            for (int i = 0; i < static_cast<int>(accumulated_trial_stats_vec.size()); i++)
             {
                 std::vector<task_recorder::AccumulatedTrialStatistics> accumulated_trial_statistics = accumulated_trial_stats_vec[i];
-                for (int j = 0; j < static_cast<int>(accumulated_trial_statistics.size()); i++)
+                for (int j = 0; j < static_cast<int> (accumulated_trial_statistics.size()); ++j)
                 {
-                    accumulated_trial_statistics[j].id = id_;
-                    bag.write(topic_name_, messsages_[j].header.stamp, accumulated_trial_statistics[j]);
+                    // accumulated_trial_statistics[j].id = getId(description_);
+                    bag.write(topic_name_, messages_[j].header.stamp, accumulated_trial_statistics[j]);
                 }
             }
             bag.close();
         }
-        catch (rosbag::BagIOException ex)
+        catch (rosbag::BagIOException& ex)
         {
-            ROS_ERROR("Problem when wrtting to bag file named %s : %s", file_name.c_str(), ex.what());
+            ROS_ERROR("Problem when writing to bag file named >%s< : %s", file_name.c_str(), ex.what());
             return false;
-        }
-
+        } 
         return true;
+    }
+
+    template<class MessageType>
+    bool TaskRecorderIO<MessageType>::getList(std::vector<std::string>& descriptions)
+    {
+        boost::filesystem::path path = boost::filesystem::path(data_directory_name_);
+        return task_recorder_utilities::getDirectoryList(path, descriptions);
     }
 }
 #endif
