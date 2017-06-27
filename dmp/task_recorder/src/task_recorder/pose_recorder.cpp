@@ -15,6 +15,8 @@
 
 namespace task_recorder
 {
+    PoseRecorder::PoseRecorder(ros::NodeHandle node_handle) : TaskRecorder<geometry_msgs::PoseStamped>(node_handle)
+    {}
     bool PoseRecorder::trasnformMsg(const geometry_msgs::PoseStamped& pose,
                                     task_recorder::DataSample& data_sample)
     {

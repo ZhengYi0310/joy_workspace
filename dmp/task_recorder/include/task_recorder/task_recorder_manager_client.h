@@ -273,11 +273,11 @@ namespace task_recorder
             ros::ServiceClient get_info_service_client_;
 
             /*!
-            *    */
-              bool getInfo(bool& is_recording,
-                                         ros::Time& first,
-                                         ros::Time& last,
-                                         double& sampling_rate);
+             */
+            bool getInfo(bool& is_recording,
+                         ros::Time& first,
+                         ros::Time& last,
+                         double& sampling_rate);
     
     };
 }
