@@ -100,9 +100,9 @@ generate_messages(DEPENDENCIES std_msgs sensor_msgs geometry_msgs)
 
 
 catkin_package(INCLUDE_DIRS include
-               LIBRARIES task_recorder_utilities
+               LIBRARIES task_recorder_utilities ${PROJECT_NAME} task_recorder_manager
 	       CATKIN_DEPENDS roscpp rosbag tf filters message_filters sensor_msgs std_msgs geometry_msgs angles usc_utilities message_runtime dynamic_movement_primitive dynamic_movement_primitive_utilities
-               DEPENDS Eigen Orocos_kdl)
+               DEPENDS Eigen Orocos_kdl Boost)
 
 add_library(task_recorder_utilities
 	src/task_recorder_utilities/accumulator.cpp
@@ -113,12 +113,25 @@ target_link_libraries(task_recorder_utilities ${orocos_kdl_LIBRARIES} ${catkin_L
 
 add_library(${PROJECT_NAME}
 	src/task_recorder/joint_states_recorder.cpp
-	#src/pose_recorder.cpp
-	#src/audio_recorder.cpp
-	#src/tf_recorder.cpp
-	#src/imu_recorder.cpp
+	src/task_recorder/pose_recorder.cpp
+	src/task_recorder/tf_recorder.cpp
+	
 )
 target_link_libraries(${PROJECT_NAME} ${orocos_kdl_LIBRARIES} ${catkin_LIBRARIES} ${EIGEN_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_LIBRARIES} ${Boost_THREAD_LIBRARIES})
+
+add_executable(task_recorder_node
+  src/task_recorder/task_recorder_node.cpp
+)
+target_link_libraries(task_recorder_node ${PROJECT_NAME} ${orocos_kdl_LIBRARIES} ${catkin_LIBRARIES} ${EIGEN_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_LIBRARIES} ${Boost_THREAD_LIBRARIES} task_recorder_utilities)
+add_dependencies(task_recorder_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+add_library(task_recorder_manager
+  src/task_recorder/task_recorder_manager.cpp
+)
+#rosbuild_add_executable(task_recorder_manager_node
+#  src/task_recorder/task_recorder_manager_node.cpp
+#)
+#target_link_libraries(task_recorder_manager_node ${PROJECT_NAME} task_recorder2_manager)
 
 
 

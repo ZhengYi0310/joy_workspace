@@ -558,6 +558,17 @@ namespace task_recorder
     }
 
     template<class MessageType>
+    bool TaskRecorder<MessageType>::startRecording(task_recorder::StartRecording::Request& request,
+                                                 task_recorder::StartRecording::Response& response)
+    {
+        startRecording(request.description);
+        response.start_time = abs_start_time_;
+        response.return_code = task_recorder::StartRecording::Response::SERVICE_CALL_SUCCESSFUL;
+        return true;
+    }
+
+
+    template<class MessageType>
     bool TaskRecorder<MessageType>::stopRecording(task_recorder::StopRecording::Request& request,
                                                   task_recorder::StopRecording::Response& response)
     {

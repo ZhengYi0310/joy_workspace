@@ -10,14 +10,14 @@
 #include <usc_utilities/param_server.h>
 
 // local includes 
-#include <task_recorder/task_recorder_utilities.h>
+#include <task_recorder_utilities/task_recorder_utilities.h>
 #include <task_recorder/pose_recorder.h>
 
 namespace task_recorder
 {
     PoseRecorder::PoseRecorder(ros::NodeHandle node_handle) : TaskRecorder<geometry_msgs::PoseStamped>(node_handle)
     {}
-    bool PoseRecorder::trasnformMsg(const geometry_msgs::PoseStamped& pose,
+    bool PoseRecorder::transformMsg(const geometry_msgs::PoseStamped& pose,
                                     task_recorder::DataSample& data_sample)
     {
         data_sample.header = pose.header;

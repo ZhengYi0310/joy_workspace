@@ -57,7 +57,7 @@ namespace task_recorder
              * @param response
              * @return True on success, otherwise False
              */
-            virtual bool StartStreaming(task_recorder::StartStreaming::Request& request,
+            virtual bool startStreaming(task_recorder::StartStreaming::Request& request,
                                         task_recorder::StartStreaming::Response& response) = 0;
 
             /*!

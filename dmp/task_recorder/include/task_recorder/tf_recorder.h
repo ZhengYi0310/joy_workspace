@@ -65,7 +65,6 @@ namespace task_recorder
 
             int num_transforms_;
             
-            int num_transforms_;
             std::vector<std::string> transform_names_;
             std::vector<int> indices_;
             

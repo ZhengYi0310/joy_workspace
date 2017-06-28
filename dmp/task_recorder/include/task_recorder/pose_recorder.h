@@ -33,7 +33,7 @@ namespace task_recorder
             /*!
              * @return True on success, otherwise False
              */
-            bool initialize(const std::string topic_name)
+            bool initialize(const std::string topic_name = std::string("/pose"))
             {
                 return TaskRecorder<geometry_msgs::PoseStamped>::initialize(topic_name);
             }
