@@ -18,16 +18,16 @@
 
 // local includes 
 #include <task_recorder/Description.h>
-#include <task_recorder/DataSampleLable.h>
+#include <task_recorder/DataSampleLabel.h>
 #include <task_recorder_utilities/task_recorder_utilities.h>
 
 namespace task_recorder_utilities
 {
     inline int getId(const task_recorder::Description& description);
     inline std::string getStringId(const task_recorder::Description& description);
-    inline std::string getDescription(const task_recorder2_msgs::Description& description);
-    inline std::string getFileName(const task_recorder2_msgs::Description& description);
-    inline std::string getBagFileName(const task_recorder2_msgs::Description& description);
+    inline std::string getDescription(const task_recorder::Description& description);
+    inline std::string getFileName(const task_recorder::Description& description);
+    inline std::string getBagFileName(const task_recorder::Description& description);
 
     inline bool check(std::string description);
     inline bool check(int label_type);
@@ -55,22 +55,22 @@ namespace task_recorder_utilities
 
     inline std::string getFileName(const task_recorder::Description& description)
     {
-        return getDescription(description) + FILE_NAME_ID_SEPARATOR + getStringId(description);
+        return getDescription(description) + FILE_NAME_ID_SEPERATOR + getStringId(description);
     }
 
     inline std::string getBagFileName(const task_recorder::Description& description)
     {
-        return getDescription(description) + FILE_NAME_ID_SEPARATOR + getStringId(description) + BAG_FILE_APPENDIX;
+        return getDescription(description) + FILE_NAME_ID_SEPERATOR + getStringId(description) + BAG_FILE_APPENDIX;
     }
     
     inline bool check(std::string description)
     {
-        return (description.compare(task_recorder2_msgs::Description::SIDE_GRASP) == 0 || description.compare(task_recorder2_msgs::Description::TOP_GRASP) == 0 || description.compare(task_recorder2_msgs::Description::PLACING) == 0 || description.compare(task_recorder2_msgs::Description::RELEASING) == 0 || description.compare(task_recorder2_msgs::Description::TURN_ON_DRILL) == 0 || description.compare(task_recorder2_msgs::Description::DRILLING) == 0);
+        return (description.compare(task_recorder::Description::SIDE_GRASP) == 0 || description.compare(task_recorder::Description::TOP_GRASP) == 0 || description.compare(task_recorder::Description::PLACING) == 0 || description.compare(task_recorder::Description::RELEASING) == 0 || description.compare(task_recorder::Description::TURN_ON_DRILL) == 0 || description.compare(task_recorder::Description::DRILLING) == 0);
     }
 
     inline bool check(int label_type)
     {
-        return (label_type == task_recorder2_msgs::DataSampleLabel::BINARY_LABEL || label_type == task_recorder2_msgs::DataSampleLabel::COST_LABEL);
+        return (label_type == task_recorder::DataSampleLabel::BINARY_LABEL || label_type == task_recorder::DataSampleLabel::COST_LABEL);
     }
 
     inline bool readDescriptionLabels(ros::NodeHandle node_handle,

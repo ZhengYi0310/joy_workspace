@@ -16,10 +16,10 @@
 #include <boost/ref.hpp>
 
 // local includes 
-#include <task_recorder/accumulator.h>
+#include <task_recorder_utilities/accumulator.h>
 
 using namespace boost;
-using namespace boost::accumulators 
+using namespace boost::accumulators; 
 
 namespace task_recorder_utilities
 {
@@ -41,7 +41,7 @@ namespace task_recorder_utilities
         }
     }
     
-    bool Accumulator::accumulate(const std::vector<task_recorder::DataSample>& data_samples)
+    bool Accumulator::accumulate(std::vector<task_recorder::DataSample>& data_samples)
     {
         ROS_ASSERT_MSG(!data_samples.empty(), "Data samples are empty. Cannot accumulate!");
         ROS_ASSERT_MSG(!data_samples[0].names.empty(), "Data samples do not contain any variable name. Cannot accumulate!");
@@ -88,7 +88,7 @@ namespace task_recorder_utilities
         return true;
     }
 
-    bool Accumulator::getAccumulatedTrialStatistics(std::vector<task_recorder::AccumulatedTrialStatistics>& accumulated_trial_statistics);
+    bool Accumulator::getAccumulatedTrialStatistics(std::vector<task_recorder::AccumulatedTrialStatistics>& accumulated_trial_statistics)
     {
         accumulated_trial_statistics.clear();
         ROS_INFO("Computing >%i< data traces with >%i< data samples each accumulated over >%i< trials.", num_data_traces_, num_data_samples_, counter_);
@@ -101,7 +101,7 @@ namespace task_recorder_utilities
             for (int j = 0; j < num_data_traces_; i++)
             {
                 accumulated_trial_statistic.count = counter_;
-                accumulated_trial_statistic.mean[j] = accumulators_[j][i] / static_cast<int>(counter_);
+                accumulated_trial_statistic.mean[j] = accumulators_(j, i) / static_cast<int>(counter_);
                 accumulated_trial_statistic.variance[j] = 0;
             }
             accumulated_trial_statistics.push_back(accumulated_trial_statistic);

@@ -44,7 +44,7 @@ namespace task_recorder
              * @param data_sample
              * @return True on success, otherwise False
              */
-            bool transformMsg(sensor_msgs::JointState& joint_state, task_recorder::DataSample& data_sample);
+            bool transformMsg(const sensor_msgs::JointState& joint_state, task_recorder::DataSample& data_sample);
 
             /*!
              * @return

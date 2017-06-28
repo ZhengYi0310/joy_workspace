@@ -33,12 +33,15 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   angles
   usc_utilities
+  message_generation
+  dynamic_movement_primitive 
+  dynamic_movement_primitive_utilities
 )
 
 
-find_package(Eigen3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIRS})
-add_definitions(${EIGEN3_DEFINITIONS})
+#find_package(Eigen3 REQUIRED)
+#include_directories(${EIGEN3_INCLUDE_DIRS})
+#add_definitions(${EIGEN3_DEFINITIONS})
 
 find_package(Eigen REQUIRED)
 include_directories(${EIGEN_INCLUDE_DIRS})
@@ -47,20 +50,9 @@ add_definitions(${EIGEN_DEFINITIONS})
 find_package(orocos_kdl REQUIRED)
 include_directories(${orocos_kdl_INCLUDE_DIRS})
 
-
-add_message_files(
- FILES
- AccumulatedTrialStatistics.msg
-)
-
-add_service_files(
- FILES 
- StartRecording.srv
- StopRecordingJointStates.srv
-)
-
-generate_messages(DEPENDENCIES std_msgs sensor_msgs geometry_msgs) 
-
+find_package(Boost REQUIRED COMPONENTS thread signals system filesystem)
+include_directories(${Boost_INCLUDE_DIRS})
+add_definitions(${Boost_DEFINITIONS})
 
 
 include_directories(
@@ -69,16 +61,64 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+add_message_files(
+ DIRECTORY msg
+ FILES
+ AccumulatedTrialStatistics.msg
+ BinaryLabel.msg
+ CostLabel.msg
+ DataSample.msg
+ DataSampleLabel.msg
+ Description.msg
+ Notification.msg
+ TaskRecorderSpecification.msg
+)
+
+add_service_files(
+ DIRECTORY srv
+ FILES 
+ Accumulate.srv
+ AddDataSamples.srv
+ DetectedEvents.srv
+ GetDataSamples.srv
+ GetInfo.srv
+ InterruptRecording.srv
+ ReadDataSamples.srv
+ SetLabel.srv
+ SetLastTrialIds.srv
+ SetupDetector.srv
+ StartRecording.srv
+ StartStreaming.srv
+ StopRecording.srv
+ StopStreaming.srv
+)
+
+generate_messages(DEPENDENCIES std_msgs sensor_msgs geometry_msgs) 
+
+
+
+
+
 catkin_package(INCLUDE_DIRS include
-               LIBRARIES ${PROJECT_NAME}
-	       CATKIN_DEPENDS roscpp rosbag tf filters message_filters sensor_msgs std_msgs geometry_msgs angles usc_utilities
-               DEPENDS Eigen Eigen3 Orocos_kdl)
+               LIBRARIES task_recorder_utilities
+	       CATKIN_DEPENDS roscpp rosbag tf filters message_filters sensor_msgs std_msgs geometry_msgs angles usc_utilities message_runtime dynamic_movement_primitive dynamic_movement_primitive_utilities
+               DEPENDS Eigen Orocos_kdl)
+
+add_library(task_recorder_utilities
+	src/task_recorder_utilities/accumulator.cpp
+	src/task_recorder_utilities/message_buffer.cpp
+        src/task_recorder_utilities/message_ring_buffer.cpp
+)
+target_link_libraries(task_recorder_utilities ${orocos_kdl_LIBRARIES} ${catkin_LIBRARIES} ${EIGEN_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_LIBRARIES} ${Boost_THREAD_LIBRARIES})
 
 add_library(${PROJECT_NAME}
-	src/accumulator.cpp
-	src/joint_states_recorder.cpp
+	src/task_recorder/joint_states_recorder.cpp
+	#src/pose_recorder.cpp
+	#src/audio_recorder.cpp
+	#src/tf_recorder.cpp
+	#src/imu_recorder.cpp
 )
-target_link_libraries(${PROJECT_NAME} ${orocos_kdl_LIBRARIES} ${catkin_LIBRARIES} ${EIGEN_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${orocos_kdl_LIBRARIES} ${catkin_LIBRARIES} ${EIGEN_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_LIBRARIES} ${Boost_THREAD_LIBRARIES})
 
 
 

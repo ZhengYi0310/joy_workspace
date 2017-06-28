@@ -115,7 +115,7 @@ namespace task_recorder
              * @param response
              * @return True on success, otherwise False
              */
-            bool stopStreaming(task_recorder2::StopStreaming::Request& request, task_recorder2::StopStreaming::Response& response);
+            bool stopStreaming(task_recorder::StopStreaming::Request& request, task_recorder::StopStreaming::Response& response);
 
             /*!
              * @param request
@@ -279,7 +279,7 @@ namespace task_recorder
             /*!
              * @param description
              */
-            void startRecording(const task_recorder2_msgs::Description& description);
+            void startRecording(const task_recorder::Description& description);
 
             /*!
              * @param message
@@ -406,7 +406,7 @@ namespace task_recorder
         ros::NodeHandle private_node_handle(recorder_io_.node_handle_, task_recorder_specification.class_name);
         ROS_VERIFY(usc_utilities::write(private_node_handle, "variable_names", default_data_sample.names));
         default_data_sample.data.resize(default_data_sample.names.size(), 0.0);
-        message_buffer_.reset(new task_recorder2_utilities::MessageRingBuffer(default_data_sample));
+        message_buffer_.reset(new task_recorder_utilities::MessageRingBuffer(default_data_sample));
         return (initialized_ = true);
     }
 
@@ -433,7 +433,7 @@ namespace task_recorder
     }
 
     template<class MessageType>
-    void TaskRecorder<MessageType>::recordMessageCallback(const MessageTypeConstPtr message)
+    void TaskRecorder<MessageType>::recordMessagesCallback(const MessageTypeConstPtr message)
     {
         MessageType msg = *message;
         if (!transformMsg(msg, data_sample_))
@@ -485,7 +485,7 @@ namespace task_recorder
     }
 
     template<class MessageType>
-    void TaskRecorder<MessageType>::startRecording()
+    void TaskRecorder<MessageType>::startRecording(const task_recorder::Description& description)
     {
         ROS_INFO("Start recording topic named >%s< with description >%s< to id >%i<.", recorder_io_.topic_name_.c_str(), task_recorder_utilities::getDescription(description).c_str(), task_recorder_utilities::getId(description));
         recorder_io_.setResampledDescription(description);
@@ -543,7 +543,7 @@ namespace task_recorder
     {
         setStreaming(true);
         response.info = std::string("Started streaming >" + recorder_io_.topic_name_ + "<. ");
-        response.return_code = task_recorder2::StartStreaming::Response::SERVICE_CALL_SUCCESSFUL;
+        response.return_code = task_recorder::StartStreaming::Response::SERVICE_CALL_SUCCESSFUL;
         return true;
     }
 
@@ -553,7 +553,7 @@ namespace task_recorder
     {
         setStreaming(false);
         response.info = std::string("Stopped streaming >" + recorder_io_.topic_name_ + "<. ");
-        response.return_code = task_recorder2::StopStreaming::Response::SERVICE_CALL_SUCCESSFUL;
+        response.return_code = task_recorder::StopStreaming::Response::SERVICE_CALL_SUCCESSFUL;
         return true;
     }
 
@@ -566,7 +566,7 @@ namespace task_recorder
         {
             response.info = std::string("Could not filter and crop messages of topic >" + recorder_io_.topic_name_ + "<. ");
             ROS_ERROR_STREAM(response.info);
-            response.return_code = task_recorder2::StopRecording::Response::SERVICE_CALL_FAILED;
+            response.return_code = task_recorder::StopRecording::Response::SERVICE_CALL_FAILED;
             return true;
         }
 
@@ -578,15 +578,15 @@ namespace task_recorder
 
     // if(recorder_io_.write_out_statistics_)
     // {
-    //   std::vector<std::vector<task_recorder2_msgs::AccumulatedTrialStatistics> > vector_of_accumulated_trial_statistics;
+    //   std::vector<std::vector<task_recorder::AccumulatedTrialStatistics> > vector_of_accumulated_trial_statistics;
     //   ROS_VERIFY(getAccumulatedTrialStatistics(vector_of_accumulated_trial_statistics));
-    //   boost::thread(boost::bind(&task_recorder2_utilities::TaskRecorderIO<task_recorder2_msgs::DataSample>::writeStatistics, recorder_io_, vector_of_accumulated_trial_statistics));
+    //   boost::thread(boost::bind(&task_recorder_utilities::TaskRecorderIO<task_recorder::DataSample>::writeStatistics, recorder_io_, vector_of_accumulated_trial_statistics));
     // }
 
         ROS_DEBUG("Stopped recording topic >%s< and returning >%i< messages.", recorder_io_.topic_name_.c_str(), (int)response.filtered_and_cropped_messages.size());
         response.description = recorder_io_.getDescription();
         response.info = std::string("Stopped recording >" + recorder_io_.topic_name_ + "<. ");
-        response.return_code = task_recorder2::StopRecording::Response::SERVICE_CALL_SUCCESSFUL;
+        response.return_code = task_recorder::StopRecording::Response::SERVICE_CALL_SUCCESSFUL;
         return true;
     }
 
@@ -597,7 +597,7 @@ namespace task_recorder
         setLogging(false);
         ROS_DEBUG("Interrupted recording topic >%s<.", recorder_io_.topic_name_.c_str());
         response.info = std::string("Stopped recording >" + recorder_io_.topic_name_ + "<. ");
-        response.return_code = task_recorder2::InterruptRecording::Response::SERVICE_CALL_SUCCESSFUL;
+        response.return_code = task_recorder::InterruptRecording::Response::SERVICE_CALL_SUCCESSFUL;
         return true;
     }
 
@@ -671,7 +671,7 @@ namespace task_recorder
 
         if(recorder_io_.write_out_raw_data_)
         {
-            //boost::thread(boost::bind(&TaskRecorderIO<task_recorder2_msgs::DataSample>::writeRawData, recorder_io_));
+            //boost::thread(boost::bind(&TaskRecorderIO<task_recorder::DataSample>::writeRawData, recorder_io_));
             boost::thread(boost::bind(&TaskRecorderIO<task_recorder::DataSample>::writeRawData, &recorder_io_));
         }
 
@@ -681,7 +681,7 @@ namespace task_recorder
         ROS_VERIFY(resample(recorder_io_.messages_, start_time, end_time, num_samples, message_names, filtered_and_cropped_messages));
         ROS_ASSERT(static_cast<int>(filtered_and_cropped_messages.size()) == num_samples);
 
-        recorder_io_.messages_ = filter_and_cropped_messages;
+        recorder_io_.messages_ = filtered_and_cropped_messages;
         return true;
     }
     
@@ -804,7 +804,7 @@ namespace task_recorder
         return true;
     }
 
-    template<class MessageType.
+    template<class MessageType>
     void TaskRecorder<MessageType>::log(const std::string& name,
                                         const int index,
                                         const std::vector<double>& input_vector,

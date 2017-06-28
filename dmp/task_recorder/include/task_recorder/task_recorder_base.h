@@ -21,6 +21,7 @@
 #include <task_recorder/StopStreaming.h>
 #include <task_recorder/StartRecording.h>
 #include <task_recorder/StopRecording.h>
+#include <task_recorder/InterruptRecording.h>
 
 namespace task_recorder
 {

@@ -18,7 +18,7 @@
 
 #include <task_recorder/DataSample.h>
 
-namespace task_recorder
+namespace task_recorder_utilities
 {
     /*!
      * @param complete_data_sample
@@ -138,11 +138,11 @@ namespace task_recorder
 
     bool isContained(const std::vector<std::string>& all_names,
                      const std::vector<std::string>& subset_names,
-                     bool verbose = true)
+                     bool verbose)
     {
         if (all_names.empty())
         {
-            ROS_ERROR_Cond(verbose, "There are no names provided!");
+            ROS_ERROR_COND(verbose, "There are no names provided!");
             return false;
         }
 
@@ -179,45 +179,9 @@ return false;
 
     bool haveSameContent(const std::vector<std::string>& all_names,
                          const std::vector<std::string>& subset_names,
-                         bool verbose = true)
+                         bool verbose)
     {
         return (isContained(all_names, subset_names, verbose) && isContained(subset_names, all_names, verbose));
-    }
-
-
-    bool extractDataSample(const task_recorder::DataSample& complete_data_sample,
-                           const std::string& name,
-                           task_recorder::DataSample& extracted_data_sample)
-    {
-        std::vector<std::string> names;
-        names.push_back(name);
-        return extractDataSample(complete_data_sample, names, extracted_data_sample);
-    }
-
-    bool extractDataSample(const task_recorder::DataSample& complete_data_sample,
-                           const std::vector<std::string>& names,
-                           task_recorder::DataSample& extracted_data_sample)
-    {
-        std::vector<task_recorder::DataSample> complete_data_samples;
-        complete_data_samples.push_back(complete_data_sample);
-        std::vector<task_recorder::DataSample> extracted_data_samples;
-        if (!extractDataSample(complete_data_samples, names, extracted_data_samples))
-        {
-            return false;
-        }
-
-        ROS_ASSERT((int)complete_data_samples.size() == (int)extracted_data_samples.size());
-        extracted_data_sample = extracted_data_samples[0];
-        return true;
-    }
-
-    bool extractDataSamples(const std::vector<task_recorder::DataSample>& complete_data_samples,
-                            const std::string& name,
-                            std::vector<task_recorder::DataSample>& extracted_data_samples)
-    {
-        std::vector<std::string> names;
-        names.push_back(name);
-        return extractDataSamples(complete_data_samples, names, extracted_data_samples);
     }
 
     bool extractDataSamples(const std::vector<task_recorder::DataSample>& complete_data_samples,
@@ -238,7 +202,7 @@ return false;
             data_sample.names = names;
             data_sample.data.resize(names.size());
 
-            for (int j = 0; j < (int)names.size() j++)
+            for (int j = 0; j < (int)names.size(); j++)
             {
                 ROS_ASSERT_MSG(data_sample.names[j].compare(complete_data_samples[i].names[indices[j]]) == 0,
                                "Extracted data sample with name >%s< doen not matach variable name >%s< !",
@@ -250,5 +214,45 @@ return false;
 
         return true;
     }
+
+
+    bool extractDataSample(const task_recorder::DataSample& complete_data_sample,
+                           const std::string& name,
+                           task_recorder::DataSample& extracted_data_sample)
+    {
+        std::vector<std::string> names;
+        names.push_back(name);
+        return extractDataSample(complete_data_sample, names, extracted_data_sample);
+    }
+
+    bool extractDataSample(const task_recorder::DataSample& complete_data_sample,
+                           const std::vector<std::string>& names,
+                           task_recorder::DataSample& extracted_data_sample)
+    {
+        std::vector<task_recorder::DataSample> complete_data_samples;
+        complete_data_samples.push_back(complete_data_sample);
+        std::vector<task_recorder::DataSample> extracted_data_samples;
+        if (!extractDataSamples(complete_data_samples, names, extracted_data_samples))
+        {
+            return false;
+        }
+
+        ROS_ASSERT((int)complete_data_samples.size() == (int)extracted_data_samples.size());
+        extracted_data_sample = extracted_data_samples[0];
+        return true;
+    }
+
+
+
+    bool extractDataSamples(const std::vector<task_recorder::DataSample>& complete_data_samples,
+                            const std::string& name,
+                            std::vector<task_recorder::DataSample>& extracted_data_samples)
+    {
+        std::vector<std::string> names;
+        names.push_back(name);
+        return extractDataSamples(complete_data_samples, names, extracted_data_samples);
+    }
+
+    
 }
 #endif

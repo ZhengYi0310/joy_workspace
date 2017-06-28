@@ -10,20 +10,17 @@
 
 // system includes 
 #include <vector>
-#include <Eigen/Eigen>
 
+// ros includes 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
 
-#include <ros/ros.h>
-
 // local includes 
 #include <task_recorder/AccumulatedTrialStatistics.h>
-#include <task_recorder/DataSample.h>
 
-namespace task_recorder_utilities
+namespace task_recorder
 {
     class Accumulator 
     {
@@ -32,7 +29,7 @@ namespace task_recorder_utilities
             typedef boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance> > AccumulatorType;
             
             
-            Accumulator() : initialized_(false), counter_(0), num_data_traces_(0), num_data_samples_(0) {};
+            Accumulator() : initialized_(false), num_data_traces_(0); num_samples(0) {};
             virtual ~Accumulator();
 
             /*!
@@ -40,24 +37,14 @@ namespace task_recorder_utilities
              * @param num_samples 
              * @return 
              */
-            //bool initialize(const int num_data_traces, const int num_data_samples);
+            bool initialize(const int num_data_traces, const int num_samples);
 
             /*!
-             * @param data_samples
-             * @param headers
+             * @param data_trace_index 
+             * @param data_trace 
+             * @return 
              */
-            void getHeaders(const std::vector<task_recorder::DataSample>& data_samples,
-                            std::vector<std_msgs::Header>& headers);
-
-            /*!
-             */
-            void clear();
-
-            /*!
-             * @param data_samples
-             * @return True on success, otherwise False
-             */
-            bool accumulate(std::vector<task_recorder::DataSample>& data_samples);
+            bool add(const int data_trace_index, std::vector<double>& data_trace);
 
             /*!
              * @param trial_statistics
@@ -69,14 +56,10 @@ namespace task_recorder_utilities
             
             bool initialized_;
 
-            int counter_;
             int num_data_traces_;
-            int num_data_samples_;
+            int num_samples_;
 
-            Eigen::MatrixXd accumulators_;
-            Eigen::MatrixXd buffer_;
-
-            //std::vector<std::vector<AccumulatorType> > accumulators_;
+            std::vector<std::vector<AccumulatorType> > accumulators_;
     };
 }
 #endif

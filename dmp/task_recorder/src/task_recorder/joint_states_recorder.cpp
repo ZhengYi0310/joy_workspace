@@ -12,7 +12,7 @@
 
 // local includes 
 #include <task_recorder/joint_states_recorder.h>
-#include <task_recorder/task_recorder_utilities.h>
+#include <task_recorder_utilities/task_recorder_utilities.h>
 
 namespace task_recorder
 {
@@ -31,7 +31,7 @@ namespace task_recorder
     {
         if(first_time_)
         {
-            ROS_VERIFY(task_recorder2_utilities::getIndices(joint_state.name, joint_names_, indices_));
+            ROS_VERIFY(task_recorder_utilities::getIndices(joint_state.name, joint_names_, indices_));
             num_joint_states_ = (int)joint_names_.size();
         }
         data_sample.header = joint_state.header;

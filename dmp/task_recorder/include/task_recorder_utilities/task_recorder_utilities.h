@@ -16,7 +16,7 @@
 #include <vector>
 #include <map>
 
-#define BOOST_FILESYSTEM_VERSION 2
+//#define BOOST_FILESYSTEM_VERSION 2
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -34,9 +34,9 @@ namespace task_recorder_utilities
     const std::string TRIAL_FILE_NAME("_trial_counter" + TRIAL_FILE_NAME_APPENDIX);
     const std::string IGNORE_DAT_FILE_NAME_APPENDIX(".dat");
     const std::string FILE_NAME_ID_SEPERATOR("_");
-    const std::string FILE_NAME_TRIAL_SEPARATOR("trial" + FILE_NAME_ID_SEPARATOR);
+    const std::string FILE_NAME_TRIAL_SEPARATOR("trial" + FILE_NAME_ID_SEPERATOR);
     const std::string FILE_NAME_STATISTICS_TRUNK_NO_SEPARATOR("stat");
-    const std::string FILE_NAME_STATISTICS_TRUNK_SEPERATOR(FILE_NAME_STATISTICS_TRUNK_NO_SEPARATOR + FILE_NAME_ID_SEPARATOR);
+    const std::string FILE_NAME_STATISTICS_TRUNK_SEPERATOR(FILE_NAME_STATISTICS_TRUNK_NO_SEPARATOR + FILE_NAME_ID_SEPERATOR);
 
     const std::string CLMC_FILE_NAME("d");
     const int MIN_TRIAL_ID = 0;
@@ -101,7 +101,7 @@ namespace task_recorder_utilities
                 }
 
                 // create .last_data symlink
-                std::string from_file = absolute_data_directory_path.file_string() + std::string("/.last_data");
+                std::string from_file = absolute_data_directory_path.string() + std::string("/.last_data");
                 std::string to_file = getTrialCounterFileName(absolute_data_directory_path, "/TaskRecorderManager/data_samples");
                 boost::filesystem::path from_path(from_file);
                 boost::filesystem::path to_path(to_file);
@@ -110,7 +110,7 @@ namespace task_recorder_utilities
 
             else
             {
-                ROS_ERROR("Directory >%s< does not exist.", absolute_data_directory_path.directory_string().c_str());
+                ROS_ERROR("Directory >%s< does not exist.", absolute_data_directory_path.string().c_str());
                 return false;
             }
         }
@@ -266,8 +266,8 @@ namespace task_recorder_utilities
         std::string file_name = topic_name;
         ROS_VERIFY(getTopicName(file_name));
         usc_utilities::removeLeadingSlash(file_name);
-        // return file_name + FILE_NAME_ID_SEPARATOR + FILE_NAME_DATA_TRUNK2 + getString(trial) + BAG_FILE_APPENDIX;
-        return file_name + FILE_NAME_ID_SEPARATOR + FILE_NAME_TRIAL_SEPARATOR + getString(trial) + BAG_FILE_APPENDIX;
+        // return file_name + FILE_NAME_ID_SEPERATOR + FILE_NAME_DATA_TRUNK2 + getString(trial) + BAG_FILE_APPENDIX;
+        return file_name + FILE_NAME_ID_SEPERATOR + FILE_NAME_TRIAL_SEPARATOR + getString(trial) + BAG_FILE_APPENDIX;
     }    
 
     inline std::string getStatFileName(const std::string& topic_name)
@@ -275,7 +275,7 @@ namespace task_recorder_utilities
         std::string file_name = topic_name;
         ROS_VERIFY(getTopicName(file_name));
         usc_utilities::removeLeadingSlash(file_name);
-        return file_name + FILE_NAME_ID_SEPARATOR + FILE_NAME_STATISTICS_TRUNK_NO_SEPARATOR + BAG_FILE_APPENDIX;
+        return file_name + FILE_NAME_ID_SEPERATOR + FILE_NAME_STATISTICS_TRUNK_NO_SEPARATOR + BAG_FILE_APPENDIX;
     }
 
     inline std::string getStatFileName(const std::string& topic_name,
@@ -284,7 +284,7 @@ namespace task_recorder_utilities
         std::string file_name = topic_name;
         ROS_VERIFY(getTopicName(file_name));
         usc_utilities::removeLeadingSlash(file_name);
-        return file_name + FILE_NAME_ID_SEPARATOR + FILE_NAME_STATISTICS_TRUNK_SEPERATOR + getString(trial) + BAG_FILE_APPENDIX;
+        return file_name + FILE_NAME_ID_SEPERATOR + FILE_NAME_STATISTICS_TRUNK_SEPERATOR + getString(trial) + BAG_FILE_APPENDIX;
     }
 
     inline bool parseDescriptionString(const std::string& description_string, task_recorder::Description& description)
@@ -320,12 +320,12 @@ namespace task_recorder_utilities
         }
 
         // read id 
-        separater_pos = ds_without_trial.rfind(FILE_NAME_ID_SEPARATOR);
-        if (separater_pos != std::string::npos)
+        seperator_pos = ds_without_trial.rfind(FILE_NAME_ID_SEPERATOR);
+        if (seperator_pos != std::string::npos)
         {
-            size_t sp = separater_pos + FILE_NAME_ID_SEPARATOR.length();
+            size_t sp = seperator_pos + FILE_NAME_ID_SEPERATOR.length();
             size_t length = ds_without_trial.length() - sp;
-            description.description = ds_without_trial.substr(0, separater_pos);
+            description.description = ds_without_trial.substr(0, seperator_pos);
             std::string id_string = ds_without_trial.substr(sp, length);
             try
             {
@@ -389,13 +389,13 @@ namespace task_recorder_utilities
         size_t topic_name_pos = file_name.find(name);
         if (topic_name_pos != std::string::npos)
         {
-            size_t separater_pos, bag_prefix_pos;
-            // separater_pos = file_name.find_last_of(FILE_NAME_ID_SEPARATOR);
-            separater_pos = file_name.rfind(FILE_NAME_ID_SEPARATOR);
+            size_t seperator_pos, bag_prefix_pos;
+            // seperator_pos = file_name.find_last_of(FILE_NAME_ID_SEPERATOR);
+            seperator_pos = file_name.rfind(FILE_NAME_ID_SEPERATOR);
             bag_prefix_pos = file_name.rfind(BAG_FILE_APPENDIX);
-            if ((separater_pos != std::string::npos) && (bag_prefix_pos != std::string::npos))
+            if ((seperator_pos != std::string::npos) && (bag_prefix_pos != std::string::npos))
             {
-                size_t start = separater_pos + FILE_NAME_ID_SEPARATOR.length();
+                size_t start = seperator_pos + FILE_NAME_ID_SEPERATOR.length();
                 size_t length = file_name.length() - start - BAG_FILE_APPENDIX.length();
                 std::string trial_string = file_name.substr(start, length);
                 try
@@ -429,8 +429,29 @@ namespace task_recorder_utilities
         return false;
     }
 
+    inline bool getDirectoryList(const boost::filesystem::path& path,
+                                 std::vector<std::string>& filenames)
+    {
+        filenames.clear();
+        boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
+        for (boost::filesystem::directory_iterator itr(path); itr != end_itr; ++itr)
+        {
+            size_t ignore_prefix_pos = (itr->path().filename().string()).find(IGNORE_DAT_FILE_NAME_APPENDIX);
+            if (ignore_prefix_pos == std::string::npos)
+            {
+                filenames.push_back(itr->path().filename().string());
+            }
+    
+            else
+            {
+                ROS_DEBUG("Ignoring file named >%s<.", itr->path().filename().string().c_str());
+            }
+        }
+        return true;
+    }
+
     inline bool checkForCompleteness(const boost::filesystem::path& path,
-                                     const int trial_counts;
+                                     const int trial_counts,
                                      const std::string& topic_name)
     {
         int current_trial_id = 0;
