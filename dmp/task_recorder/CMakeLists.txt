@@ -80,7 +80,7 @@ add_service_files(
  Accumulate.srv
  AddDataSamples.srv
  DetectedEvents.srv
- GetDataSamples.srv
+ GetDataSample.srv
  GetInfo.srv
  InterruptRecording.srv
  ReadDataSamples.srv

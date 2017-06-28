@@ -125,13 +125,13 @@ add_executable(task_recorder_node
 target_link_libraries(task_recorder_node ${PROJECT_NAME} ${orocos_kdl_LIBRARIES} ${catkin_LIBRARIES} ${EIGEN_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_LIBRARIES} ${Boost_THREAD_LIBRARIES} task_recorder_utilities)
 add_dependencies(task_recorder_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-rosbuild_add_library(task_recorder_manager
+add_library(task_recorder_manager
   src/task_recorder/task_recorder_manager.cpp
 )
-rosbuild_add_executable(task_recorder_manager_node
-  src/task_recorder/task_recorder_manager_node.cpp
-)
-target_link_libraries(task_recorder_manager_node ${PROJECT_NAME} task_recorder2_manager)
+#rosbuild_add_executable(task_recorder_manager_node
+#  src/task_recorder/task_recorder_manager_node.cpp
+#)
+#target_link_libraries(task_recorder_manager_node ${PROJECT_NAME} task_recorder2_manager)
 
 
 

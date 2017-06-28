@@ -20,7 +20,7 @@
 #include <task_recorder/StopRecording.h>
 #include <task_recorder/DataSample.h>
 
-#include <task_recorder/task_recorder_utilities.h>
+#include <task_recorder_utilities/task_recorder_utilities.h>
 
 namespace task_recorder 
 {
@@ -87,7 +87,7 @@ namespace task_recorder
         
             /*!
              */
-            std::vector<task_recorder2_msgs::DataSample> messages_;
+            std::vector<task_recorder::DataSample> messages_;
 
         private:
             
@@ -102,7 +102,7 @@ namespace task_recorder
     };
 
     template<class MessageType>
-    TaskRecorderClient<MessageType>::initialize(const std::string& topic_name,
+    bool TaskRecorderClient<MessageType>::initialize(const std::string& topic_name,
                                                 const std::string service_prefix,
                                                 const std::string node_name)
     {

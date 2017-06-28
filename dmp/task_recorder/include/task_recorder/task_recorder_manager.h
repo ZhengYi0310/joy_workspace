@@ -164,12 +164,12 @@ namespace task_recorder
 
             /*! task recorders
              */
-            std::vector<boost::shared_ptr<task_recorder2::TaskRecorderBase> > task_recorders_;
+            std::vector<boost::shared_ptr<task_recorder::TaskRecorderBase> > task_recorders_;
             
             /*! data samples
              */
-            std::vector<task_recorder2_msgs::DataSample> data_samples_;
-            task_recorder2_msgs::DataSample last_combined_data_sample_;
+            std::vector<task_recorder::DataSample> data_samples_;
+            task_recorder::DataSample last_combined_data_sample_;
             boost::mutex last_combined_data_sample_mutex_;
 
             /*
@@ -180,10 +180,10 @@ namespace task_recorder
             std::vector<task_recorder::StopStreaming::Response> stop_streaming_responses_;
             std::vector<task_recorder::StartRecording::Request> start_recording_requests_;
             std::vector<task_recorder::StartRecording::Response> start_recording_responses_;
-            std::vector<task_recorder2::StopRecording::Request> stop_recording_requests_;
-            std::vector<task_recorder2::StopRecording::Response> stop_recording_responses_;
-            std::vector<task_recorder2::InterruptRecording::Request> interrupt_recording_requests_;
-            std::vector<task_recorder2::InterruptRecording::Response> interrupt_recording_responses_;
+            std::vector<task_recorder::StopRecording::Request> stop_recording_requests_;
+            std::vector<task_recorder::StopRecording::Response> stop_recording_responses_;
+            std::vector<task_recorder::InterruptRecording::Request> interrupt_recording_requests_;
+            std::vector<task_recorder::InterruptRecording::Response> interrupt_recording_responses_;
 
             /*
              */
