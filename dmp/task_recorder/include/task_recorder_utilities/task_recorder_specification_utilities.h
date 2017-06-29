@@ -64,7 +64,7 @@ namespace task_recorder_utilities
             std::string service_prefix = "";
             if (recorder_map[i].hasMember(task_recorder::TaskRecorderSpecification::SERVICE_PREFIX))
             {
-                std::string aux = recorder_map[i][task_recorder2_msgs::TaskRecorderSpecification::SERVICE_PREFIX];
+                std::string aux = recorder_map[i][task_recorder::TaskRecorderSpecification::SERVICE_PREFIX];
                 service_prefix = aux;
             }
             specification.service_prefix = service_prefix;

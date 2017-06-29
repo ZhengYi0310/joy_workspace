@@ -20,6 +20,8 @@
   <build_depend>angles</build_depend>
   <build_depend>usc_utilities</build_depend>
   <build_depend>message_generation</build_depend>
+  <build_depend>dynamic_movement_primitive</build_depend>
+  <build_depend>dynamic_movement_primitive_utilities</build_depend>
   
   <run_depend>roscpp</run_depend>
   <run_depend>rosbag</run_depend>
@@ -32,7 +34,9 @@
   <run_depend>geometry_msgs</run_depend>
   <run_depend>angles</run_depend>
   <run_depend>usc_utilities</run_depend>
-  <run_depend>message_runtime</run_depend>
+  <run_depend>message_runtime</run_depend> 
+  <run_depend>dynamic_movement_primitive</run_depend>
+  <run_depend>dynamic_movement_primitive_utilities</run_depend>
 
   <export>
     <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltask_recorder"/>

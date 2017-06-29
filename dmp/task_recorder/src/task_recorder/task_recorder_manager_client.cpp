@@ -13,10 +13,10 @@
 #include <task_recorder/GetDataSample.h>
 #include <task_recorder/GetInfo.h>
 #include <task_recorder/AddDataSamples.h>
-#include <task_recorder/ReadDataSample.h>
+#include <task_recorder/ReadDataSamples.h>
 
 #include <task_recorder_utilities/task_description_utilities.h>
-#include <usc_utilities/service.h>
+#include <usc_utilities/services.h>
 
 #include <task_recorder/task_recorder_manager_client.h>
 
@@ -127,7 +127,7 @@ namespace task_recorder
     }
 
     bool TaskRecorderManagerClient::startRecording(const task_recorder::Description& description,
-                                                   const ros::Time& start_time)
+                                                   ros::Time& start_time)
     {
         ROS_DEBUG("Start recording description >%s< with id >%i<.", description.description.c_str(), description.id);
         if(!servicesAreReady())
@@ -209,7 +209,7 @@ namespace task_recorder
                                                   const bool stop_recording)
     {
         bool is_recording;
-        ros::Time first,
+        ros::Time first;
         ros::Time last;
         double sampling_rate;
         if (!getInfo(is_recording, first, last, sampling_rate))
@@ -412,7 +412,7 @@ namespace task_recorder
     }
 
     bool TaskRecorderManagerClient::getInfo(const task_recorder::Description& description,
-                                            std::string& file_name)
+                                            std::string& abs_file_name)
     {
         if(!servicesAreReady())
         {
