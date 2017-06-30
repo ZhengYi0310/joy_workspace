@@ -13,6 +13,7 @@
 
 // local includes
 #include <task_recorder/joint_states_recorder.h>
+#include <task_recorder/pose_recorder.h>
 #include <task_recorder/task_recorder_client.h>
 
 
@@ -23,27 +24,36 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "TestTaskRecorder");
   ros::NodeHandle node_handle("~");
 
+
   TaskRecorderClient<sensor_msgs::JointState> joint_states_recorder(node_handle);
   joint_states_recorder.initialize("/joint_states");
 
+  
   /*
   TaskRecorderClient<alsa_audio::AudioSample> audio_recorder(node_handle);
   audio_recorder.initialize("/AudioProcessor/audio_samples");
   */
+
+  
+  TaskRecorderClient<geometry_msgs::PoseStamped> pose_recorder(node_handle);
+  pose_recorder.initialize("/pose_r");
+  
   ros::WallDuration(1.0).sleep();
 
   ROS_INFO("Starting to record...");
   joint_states_recorder.startRecording();
+  pose_recorder.startRecording();
   //audio_recorder.startRecording();
 
   ros::Time start_time = ros::Time::now() + ros::Duration(1.0);
-  ros::WallDuration(3.0).sleep();
+  ros::WallDuration(5.0).sleep();
   ros::Time end_time = ros::Time::now() - ros::Duration (1.0);
 
   const int num_samples = 100;
   ROS_INFO("Stopping recording...");
 
   joint_states_recorder.stopRecording(start_time, end_time, num_samples);
+  pose_recorder.stopRecording(start_time, end_time, num_samples);
   //audio_recorder.stopRecording(start_time, end_time, num_samples);
 
   return 0;

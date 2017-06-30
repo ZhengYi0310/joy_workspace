@@ -94,7 +94,7 @@ namespace task_recorder_utilities
         {
             if (create_if_nonexistent)
             {
-                if (!boost::filesystem::create_directory(absolute_data_directory_path))
+                if (!boost::filesystem::create_directories(absolute_data_directory_path))
                 {
                     ROS_WARN_STREAM("Could not create directory >" << absolute_data_directory_path.filename() << "< : " << std::strerror(errno));
                     return false;
@@ -201,6 +201,15 @@ namespace task_recorder_utilities
                                      int& trial_counter,
                                      const std::string& topic_name)
     {
+        std::string absolute_trial_file_name = getTrialCounterFileName(path, topic_name);
+        if (!boost::filesystem::exists(absolute_trial_file_name))
+        {
+            if (!createTrialCounterFile(path, 0, topic_name))
+            {
+                return false;
+            }
+        }
+
         std::ifstream trial_counter_file(getTrialCounterFileName(path, topic_name).c_str());
         if (trial_counter_file.is_open())
         {
@@ -378,6 +387,29 @@ namespace task_recorder_utilities
         file_name.append(BAG_FILE_APPENDIX);
     }
 
+    
+
+    inline bool getDirectoryList(const boost::filesystem::path& path,
+                                 std::vector<std::string>& filenames)
+    {
+        filenames.clear();
+        boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
+        for (boost::filesystem::directory_iterator itr(path); itr != end_itr; ++itr)
+        {
+            size_t ignore_prefix_pos = (itr->path().filename().string()).find(IGNORE_DAT_FILE_NAME_APPENDIX);
+            if (ignore_prefix_pos == std::string::npos)
+            {
+                filenames.push_back(itr->path().filename().string());
+            }
+    
+            else
+            {
+                ROS_DEBUG("Ignoring file named >%s<.", itr->path().filename().string().c_str());
+            }
+        }
+        return true;
+    }
+
     inline bool getTrialId(const std::string& file_name,
                            int& trial_id,
                            const std::string& topic_name)
@@ -429,27 +461,6 @@ namespace task_recorder_utilities
         return false;
     }
 
-    inline bool getDirectoryList(const boost::filesystem::path& path,
-                                 std::vector<std::string>& filenames)
-    {
-        filenames.clear();
-        boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
-        for (boost::filesystem::directory_iterator itr(path); itr != end_itr; ++itr)
-        {
-            size_t ignore_prefix_pos = (itr->path().filename().string()).find(IGNORE_DAT_FILE_NAME_APPENDIX);
-            if (ignore_prefix_pos == std::string::npos)
-            {
-                filenames.push_back(itr->path().filename().string());
-            }
-    
-            else
-            {
-                ROS_DEBUG("Ignoring file named >%s<.", itr->path().filename().string().c_str());
-            }
-        }
-        return true;
-    }
-
     inline bool checkForCompleteness(const boost::filesystem::path& path,
                                      const int trial_counts,
                                      const std::string& topic_name)
@@ -460,7 +471,7 @@ namespace task_recorder_utilities
         boost::filesystem::directory_iterator end_itr; //default contruction yeilds past-the-end 
         for (boost::filesystem::directory_iterator itr(path); itr != end_itr; itr++)
         {
-            if (getTrialId(itr->path().filename(), current_trial_id, topic_name))
+            if (getTrialId(itr->path().filename().string(), current_trial_id, topic_name))
             {
                 trial_ids.insert(std::pair<int, int>(current_trial_id, current_trial_id));
             }

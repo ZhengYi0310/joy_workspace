@@ -181,7 +181,7 @@ namespace task_recorder
 
         data_directory_name_ = task_recorder_utilities::getDirectoryPath(recorder_package_name, recorder_data_directory_name);
         ROS_VERIFY(task_recorder_utilities::checkAndCreateDirectories(data_directory_name_));
-        ROS_DEBUG("Setting TaskRecorderIO data directory name to >%s<.", data_directory_name_.c_str());
+        ROS_INFO("Setting TaskRecorderIO data directory name to >%s<.", data_directory_name_.c_str());
         
         return (initialized_ = true);
     }
@@ -191,7 +191,7 @@ namespace task_recorder
                                         const std::string directory_name)
     {
         ROS_ASSERT_MSG(initialized_, "Task recorder IO module is not initialized.");
-description_ = description;
+        description_ = description;
 
         if (create_directories_)
         {
@@ -205,7 +205,7 @@ description_ = description;
             ROS_VERIFY(task_recorder_utilities::checkForDirectory(path));
             ROS_VERIFY(task_recorder_utilities::getTrialId(path, description_.trial, prefixed_topic_name_));
             ROS_VERIFY(task_recorder_utilities::checkForCompleteness(path, description_.trial, prefixed_topic_name_));
-            ROS_DEBUG("Setting trial to >%i<.", description_.trial);
+            ROS_INFO("Setting trial to >%i<.", description_.trial);
         }
         else 
         {

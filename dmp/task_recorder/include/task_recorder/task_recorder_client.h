@@ -136,7 +136,7 @@ namespace task_recorder
         task_recorder::StartRecording::Response start_response;
 
         bool service_online = false;
-        ROS_DEBUG("Waiting for >%s< ...", start_recording_service_client_.getService().c_str());
+        ROS_INFO("Waiting for >%s< ...", start_recording_service_client_.getService().c_str());
         while (ros::ok() && !service_online)
         {
             if (!start_recording_service_client_.waitForExistence(ros::Duration(1.0)))
@@ -148,7 +148,7 @@ namespace task_recorder
                 service_online = true;
             }
         }
-        ROS_DEBUG("Calling >%s< ...", start_recording_service_client_.getService().c_str());
+        ROS_INFO("Calling >%s< ...", start_recording_service_client_.getService().c_str());
         return start_recording_service_client_.call(start_request, start_response);
     }
 
@@ -170,6 +170,7 @@ namespace task_recorder
         stop_request.crop_end_time = end_time;
         stop_request.num_samples = num_samples;
         stop_request.message_names = message_names;
+        stop_request.stop_recording = true;
 
         bool service_online = false;
         while (ros::ok() && !service_online)

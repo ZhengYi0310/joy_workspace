@@ -25,10 +25,11 @@ int main(int argc, char **argv)
     ROS_VERIFY(joint_states_recorder.initialize());
 
     task_recorder::PoseRecorder pose_recorder(node_handle);
-    ROS_VERIFY(pose_recorder.initialize());
+    std::string pose_topic_name = std::string("/pose_r");
+    ROS_VERIFY(pose_recorder.initialize(pose_topic_name));
 
-    task_recorder::TFRecorder tf_recorder(node_handle);
-    ROS_VERIFY(tf_recorder.initialize());
+    //task_recorder::TFRecorder tf_recorder(node_handle);
+    //ROS_VERIFY(tf_recorder.initialize());
 
     ros::spin();
     return 1;

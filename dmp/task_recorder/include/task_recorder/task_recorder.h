@@ -214,6 +214,7 @@ namespace task_recorder
              */
             bool startRecording()
             {
+                //message_subscriber_ = recorder_io_.node_handle_.subscribe(recorder_io_.topic_name_, MESSAGE_SUBSCRIBER_BUFFER_SIZE, &TaskRecorder<MessageType>::recordMessagesCallback, this);
                 return true;
             }
 
@@ -356,7 +357,7 @@ namespace task_recorder
 
     template<class MessageType>
     TaskRecorder<MessageType>::TaskRecorder(ros::NodeHandle node_handle) :
-    initialized_(false), first_time_(true), recorder_io_(ros::NodeHandle("/TaskRecorderManager")), variable_name_prefix_(""), logging_(false), streaming_(false), /*accumulator_(node_handle),*/
+    initialized_(false), first_time_(true), recorder_io_(ros::NodeHandle("/TaskRecorder")), variable_name_prefix_(""), logging_(false), streaming_(false), /*accumulator_(node_handle),*/
     num_signals_(0), is_filtered_(false), splining_method_(BSpline)
     {
     }
@@ -386,7 +387,7 @@ namespace task_recorder
         if(recorder_io_.node_handle_.hasParam(full_topic_name))
         {
             is_filtered_ = true;
-            ROS_DEBUG("Filtering >%i< signals for >%s<.", num_signals_, full_topic_name.c_str());
+            ROS_INFO("Filtering >%i< signals for >%s<.", num_signals_, full_topic_name.c_str());
             filtered_data_.resize(num_signals_, 0.0);
             unfiltered_data_.resize(num_signals_, 0.0);
             std::string parameter_name = recorder_io_.node_handle_.getNamespace() + std::string("/") + full_topic_name + std::string("/Filter");
@@ -397,7 +398,10 @@ namespace task_recorder
     
         stop_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("stop_recording_") + task_recorder_specification.service_prefix + full_topic_name, &TaskRecorder<MessageType>::stopRecording, this);
 
+        
+        //******************
         message_subscriber_ = recorder_io_.node_handle_.subscribe(recorder_io_.topic_name_, MESSAGE_SUBSCRIBER_BUFFER_SIZE, &TaskRecorder<MessageType>::recordMessagesCallback, this);
+        //******************
         
         task_recorder::DataSample default_data_sample;
         default_data_sample.names = getNames();
@@ -503,8 +507,8 @@ namespace task_recorder
     void TaskRecorder<MessageType>::setLogging(bool logging)
     {
         mutex_.lock();
-        ROS_DEBUG_COND(logging_ && !logging, "Stop recording topic named >%s<.", recorder_io_.topic_name_.c_str());
-        ROS_DEBUG_COND(!logging_ && logging, "Start recording topic named >%s<.", recorder_io_.topic_name_.c_str());
+        ROS_INFO_COND(logging_ && !logging, "Stop recording topic named >%s<.", recorder_io_.topic_name_.c_str());
+        ROS_INFO_COND(!logging_ && logging, "Start recording topic named >%s<.", recorder_io_.topic_name_.c_str());
         logging_ = logging;
         mutex_.unlock();
     }
@@ -583,8 +587,11 @@ namespace task_recorder
 
         if (recorder_io_.write_out_resampled_data_)
         {
-            //boost::thread(boost::bind(&TaskRecorderIO<task_recorder::DataSample>::writeResampledData, recorder_io_));
-            boost::thread(boost::bind(&TaskRecorderIO<task_recorder::DataSample>::writeResampledData, &recorder_io_));
+            //boost::thread(boost::bind(&TaskRecorderIO<task_recorder::DataSample>::writeResampledData, &recorder_io_));
+            boost::thread write_sampled_data_thread(boost::bind(&TaskRecorderIO<task_recorder::DataSample>::writeResampledData, &recorder_io_));
+            
+            // wait for the sampled data writing thread to complete 
+            write_sampled_data_thread.join();
         }
 
     // if(recorder_io_.write_out_statistics_)
@@ -639,6 +646,7 @@ namespace task_recorder
         filtered_and_cropped_messages.clear();
         if(num_samples == 1) // only 1 sample requested
         {
+            ROS_INFO("There is only >>1<< message.");
             task_recorder::DataSample data_sample;
             ROS_VERIFY(message_buffer_->get(start_time, data_sample));
             data_sample.header.stamp = ros::TIME_MIN;
@@ -679,11 +687,13 @@ namespace task_recorder
         ROS_VERIFY(task_recorder_utilities::crop<task_recorder::DataSample>(recorder_io_.messages_, start_time, end_time));
         // then remove duplicates
         ROS_VERIFY(task_recorder_utilities::removeDuplicates<task_recorder::DataSample>(recorder_io_.messages_));
-
         if(recorder_io_.write_out_raw_data_)
         {
             //boost::thread(boost::bind(&TaskRecorderIO<task_recorder::DataSample>::writeRawData, recorder_io_));
-            boost::thread(boost::bind(&TaskRecorderIO<task_recorder::DataSample>::writeRawData, &recorder_io_));
+            //boost::thread(boost::bind(&TaskRecorderIO<task_recorder::DataSample>::writeRawData, &recorder_io_));
+            boost::thread write_raw_data_thread(boost::bind(&TaskRecorderIO<task_recorder::DataSample>::writeRawData, &recorder_io_));
+            // wait for the raw data writing thread to join 
+            write_raw_data_thread.join();
         }
 
         ROS_DEBUG("Resampling >%i< messages to >%i< messages for topic >%s<.", (int)recorder_io_.messages_.size(), num_samples, recorder_io_.topic_name_.c_str());
@@ -693,6 +703,7 @@ namespace task_recorder
         ROS_ASSERT(static_cast<int>(filtered_and_cropped_messages.size()) == num_samples);
 
         recorder_io_.messages_ = filtered_and_cropped_messages;
+
         return true;
     }
     
