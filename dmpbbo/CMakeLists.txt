@@ -1,0 +1,111 @@
+cmake_minimum_required(VERSION 2.4.6)
+project(dmpbbo)
+
+# Set the build type.  Options are:
+#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
+#  Debug          : w/ debug symbols, w/o optimization
+#  Release        : w/o debug symbols, w/ optimization
+#  RelWithDebInfo : w/ debug symbols, w/ optimization
+#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
+#set(ROS_BUILD_TYPE RelWithDebInfo)
+
+#rosbuild_init()
+# General settings
+
+# Some settings related to building/installing libraries and header files
+# Set this to STATIC if you want to build static libraries instead.
+option(BUILD_SHARED_LIBS "Enable this option to build shared libraries" OFF)
+
+if(BUILD_SHARED_LIBS)
+set(SHARED_OR_STATIC "SHARED")
+else()
+set(SHARED_OR_STATIC "STATIC")
+endif()
+
+set(LIB_INSTALL_DIR "${PROJECT_SOURCE_DIR}/lib")
+#set the default path for built executables to the "bin" directory
+set(INCLUDE_INSTALL_DIR ${PROJECT_SOURCE_DIR}/include)
+#set the default path for built libraries to the "lib" directory
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+
+# Some flags for CXX
+set(CMAKE_CXX_FLAGS "-Wall -std=c++0x -fPIC")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+
+# Define macros to check for real time requirements
+# To activate the EIGEN_MALLOC asserts use: cmake .. -DREALTIME_CHECKS=1 -DCMAKE_BUILD_TYPE=Debug
+if(REALTIME_CHECKS)
+   add_definitions(-DREALTIME_CHECKS)
+endif()
+
+
+# Appends the cmake/modules path inside the MAKE_MODULE_PATH variable which stores the
+# directories of additional CMake modules (ie. MacroOutOfSourceBuild.cmake):
+set(CMAKE_MODULE_PATH ${oo_dmp_bbo_SOURCE_DIR}/cmake/modules "${CMAKE_SOURCE_DIR}/src/functionapproximators/" ${CMAKE_MODULE_PATH})
+
+include_directories(${PROJECT_SOURCE_DIR}/dmpbbo)
+link_directories(${CMAKE_SOURCE_DIR}/lib)
+
+# Find boost packages
+find_package( Boost 1.34 COMPONENTS filesystem system serialization REQUIRED)
+link_directories ( ${Boost_LIBRARY_DIRS} )
+include_directories ( ${Boost_INCLUDE_DIRS} )
+
+add_subdirectory(dmpbbo)
+
+find_package(catkin REQUIRED COMPONENTS
+  cmake_modules
+  message_generation
+  roscpp
+  usc_utilities
+  rosbag
+  sensor_msgs
+  std_msgs
+)
+
+find_package(Boost REQUIRED COMPONENTS thread signals system filesystem)
+include_directories(${Boost_INCLUDE_DIRS})
+add_definitions(${Boost_DEFINITIONS})
+
+find_package(Eigen REQUIRED)
+include_directories(${EIGEN_INCLUDE_DIRS})
+add_definitions(${EIGEN_DEFINITIONS})
+include_directories(${catkin_INCLUDE_DIRS})
+
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIRS})
+add_definitions(${EIGEN3_DEFINITIONS})
+
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+
+
+#add_message_files(
+#)
+
+#generate_messages(DEPENDENCIES)
+#rosbuild_gensrv()
+
+#add_custom_target(
+#   extern_lib
+#   COMMAND make
+#   ${PROJECT_SOURCE_DIR}/lwrLib
+#)
+
+#add_custom_target(
+#   extern_lib
+#   COMMAND make
+#   ${PROJECT_SOURCE_DIR}/dmpLib
+#)
+catkin_package(INCLUDE_DIRS
+               LIBRARIES 
+               CATKIN_DEPENDS cmake_modules message_runtime roscpp usc_utilities rosbag sensor_msgs std_msgs
+               DEPENDS Eigen Eigen3 Boost)
+
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+)
+
+
