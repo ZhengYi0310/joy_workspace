@@ -29,7 +29,7 @@ namespace task_recorder
             /*!
              * @return Ture on success, otherwise False 
              */
-            bool initialize(const std::string topic_name = std::string("/robot_cartesian_state"))
+            bool initialize(const std::string topic_name = std::string("/cartesian_pose"))
             {
                 return TaskRecorder<barrett_hw::arm_cartesian_state>::initialize(topic_name);
             }
@@ -46,7 +46,7 @@ namespace task_recorder
              */
             int getNumSignals() const 
             {
-                return static_cast<int>(NUM_CARTESIAN_POSE_VARIABLES);
+                return static_cast<int>(NUM_CARTESIAN_POSE_VARIABLES + 1);
             }
 
             /*!
@@ -64,7 +64,7 @@ namespace task_recorder
 
         private:
             
-            static const unsigned int NUM_CARTESIAN_POSE_VARIABLES = 6;
+            static const unsigned int NUM_CARTESIAN_POSE_VARIABLES = 13;
             enum
             {
                 POSE_X = 0, POSE_Y, POSE_Z, POSE_QW, POSE_QX, POSE_QY, POSE_QZ, TWIST_X, TWIST_Y, TWIST_Z, TWIST_LINX, TWIST_LINY, TWIST_LINZ

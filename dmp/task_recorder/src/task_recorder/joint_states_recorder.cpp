@@ -16,7 +16,7 @@
 
 namespace task_recorder
 {
-    JointStatesRecorder::JointStatesRecorder(ros::NodeHandle node_handle) : TaskRecorder<sensor_msgs::JointState>(node_handle), num_joint_states_(0)
+    JointStatesRecorder::JointStatesRecorder(ros::NodeHandle node_handle) : TaskRecorder<barrett_hw::joint_state>(node_handle), num_joint_states_(0)
     {
         ROS_VERIFY(usc_utilities::read(node_handle, "joint_names", joint_names_));
         ROS_DEBUG("Starting joint states recorder for joint:");
@@ -26,7 +26,7 @@ namespace task_recorder
         }
     }
 
-    bool JointStatesRecorder::transformMsg(const sensor_msgs::JointState& joint_state,
+    bool JointStatesRecorder::transformMsg(const barrett_hw::joint_state& joint_state,
                                            task_recorder::DataSample& data_sample)
     {
         if(first_time_)
@@ -36,8 +36,7 @@ namespace task_recorder
         }
         data_sample.header = joint_state.header;
 
-        ROS_ASSERT((int)data_sample.data.size() == (num_joint_states_ * POS_VEL_EFF));
-
+        ROS_ASSERT((int)data_sample.data.size() == (num_joint_states_ * POS_VEL_EFF + 1));
         // positions, velicities, and acceleration
         for (int i = 0; i < num_joint_states_; ++i)
         {
@@ -45,6 +44,7 @@ namespace task_recorder
             data_sample.data[(i * POS_VEL_EFF) + VELOCITIES] = joint_state.velocity[indices_[i]];
             data_sample.data[(i * POS_VEL_EFF) + EFFORTS] = joint_state.effort[indices_[i]];
         }
+        data_sample.data.back() = joint_state.header_from_controller_start.toSec();
         return true;
     }
 
@@ -59,6 +59,7 @@ namespace task_recorder
             names.push_back(joint_names_[i] + std::string("_vel"));
             names.push_back(joint_names_[i] + std::string("_eff"));
         }
+        names.push_back("header_from_controller_start");
         return names;
     }
 }

@@ -18,13 +18,13 @@ add_message_files(DIRECTORY msg FILES
         robot_cartesian_state.msg
 		robot_states_tactile.msg
   		robot_states_no_tactile.msg
-  )
+)
   generate_messages(DEPENDENCIES
   biotac_sensors
   geometry_msgs
   std_msgs
   visualization_msgs
-  )
+)
 
 if(Xenomai_FOUND)
   

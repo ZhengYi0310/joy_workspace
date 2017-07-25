@@ -16,8 +16,8 @@ namespace task_recorder
 {
     CartesianStateRecorder::CartesianStateRecorder(ros::NodeHandle node_handle) : TaskRecorder<barrett_hw::arm_cartesian_state>(node_handle)
     {
-        ROS_VERIFY(usc_utilities::read(node_handle, "robot_name", arm_name_));
-        ROS_DEBUG("Starting the cartesian pose reocrder for the arm %s", arm_name_.c_str());
+        //ROS_VERIFY(usc_utilities::read(node_handle, "robot_name", arm_name_));
+        //ROS_DEBUG("Starting the cartesian pose reocrder for the arm %s", arm_name_.c_str());
     }
 
     bool CartesianStateRecorder::transformMsg(const barrett_hw::arm_cartesian_state& arm_cartesian_state, task_recorder::DataSample& data_sample)
@@ -31,14 +31,15 @@ namespace task_recorder
         data_sample.data[POSE_QX] = arm_cartesian_state.Pose.orientation.x;
         data_sample.data[POSE_QY] = arm_cartesian_state.Pose.orientation.y;
         data_sample.data[POSE_QZ] = arm_cartesian_state.Pose.orientation.z;
-
         data_sample.data[TWIST_X] = arm_cartesian_state.Twist.linear.x;
         data_sample.data[TWIST_Y] = arm_cartesian_state.Twist.linear.y;
         data_sample.data[TWIST_Z] = arm_cartesian_state.Twist.linear.z;
         data_sample.data[TWIST_LINX] = arm_cartesian_state.Twist.angular.x;
         data_sample.data[TWIST_LINY] = arm_cartesian_state.Twist.angular.y;
         data_sample.data[TWIST_LINZ] = arm_cartesian_state.Twist.angular.z;
+        data_sample.data[TWIST_LINZ + 1] = arm_cartesian_state.header_from_controller_start.toSec();
 
+        return true;
     }
 
     std::vector<std::string> CartesianStateRecorder::getNames() const 
@@ -57,7 +58,8 @@ namespace task_recorder
         names.push_back("TWIST_LINX");
         names.push_back("TWIST_LINY");
         names.push_back("TWIST_LINZ");
-
+        names.push_back("header_from_controller_start");
+        
         return names;
     }
 

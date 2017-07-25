@@ -26,7 +26,7 @@ namespace task_recorder
             BioTacStateRecorder(ros::NodeHandle node_handle);
             virtual ~BioTacStateRecorder() {};
 
-            bool initialize(const std::string topic_name = std::string("/biotac_states"))
+            bool initialize(const std::string topic_name = std::string("/biotac_sensors"))
             {
                 return TaskRecorder<biotac_sensors::BioTacHand>::initialize(topic_name);
             }
@@ -43,7 +43,7 @@ namespace task_recorder
              */
             int getNumSignals() const 
             {
-                return static_cast<int>(biotac_serials_.size() * (PDC_INDEX + TAC_INDEX + PDC_INDEX + PAC_INDEX + ELEC_INDEX));
+                return static_cast<int>(3 * (PDC_INDEX + TAC_INDEX + PDC_INDEX + PAC_INDEX + ELEC_INDEX));
             }
             
             /*!
@@ -66,10 +66,10 @@ namespace task_recorder
 
             enum
             {
-                TDC_INDEX = 0; TAC_INDEX; PDC_INDEX; PAC_INDEX = 22; ELEC_INDEX = 19
+                TDC_INDEX = 0, TAC_INDEX, PDC_INDEX, PAC_INDEX = 22, ELEC_INDEX = 19
             };
 
             static const unsigned int TOTAL_INDEX = PDC_INDEX + PAC_INDEX + ELEC_INDEX + 1;
-    }
+    };
 }
 #endif

@@ -14,6 +14,7 @@
 
 // ros includes 
 #include <sensor_msgs/JointState.h>
+#include <barrett_hw/joint_state.h>
 
 // local includes 
 #include <task_recorder/task_recorder.h>
@@ -21,7 +22,7 @@
 
 namespace task_recorder
 {
-    class JointStatesRecorder : public TaskRecorder<sensor_msgs::JointState>
+    class JointStatesRecorder : public TaskRecorder<barrett_hw::joint_state>
     {
         public:
             
@@ -34,9 +35,9 @@ namespace task_recorder
             /*!
              * @return Ture on success, otherwise False
              */
-            bool initialize(const std::string topic_name = std::string("/joint_states"))
+            bool initialize(const std::string topic_name = std::string("/joint_states_rt"))
             {
-                return TaskRecorder<sensor_msgs::JointState>::initialize(topic_name);
+                return TaskRecorder<barrett_hw::joint_state>::initialize(topic_name);
             }
 
             /*!
@@ -44,14 +45,14 @@ namespace task_recorder
              * @param data_sample
              * @return True on success, otherwise False
              */
-            bool transformMsg(const sensor_msgs::JointState& joint_state, task_recorder::DataSample& data_sample);
+            bool transformMsg(const barrett_hw::joint_state& joint_state, task_recorder::DataSample& data_sample);
 
             /*!
              * @return
              */
             int getNumSignals() const
             {
-                return static_cast<int>(POS_VEL_EFF * joint_names_.size());
+                return static_cast<int>(POS_VEL_EFF * joint_names_.size() + 1);
             }
 
             /*!

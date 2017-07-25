@@ -4,4 +4,4 @@ task_recorders:
   -
     class_name: JointStatesRecorder
     topic_name: /joint_states
-splining_method: Bspline
+splining_method: BSpline

@@ -371,7 +371,7 @@ namespace task_recorder
             ROS_ERROR("Could not initialize task recorder on topic >%s< with prefix >%s<.", task_recorder_specification.topic_name.c_str(), task_recorder_specification.service_prefix.c_str());
             return (initialized_ = false);
         }
-
+        
         ROS_VERIFY(setSpliningMethod(task_recorder_specification.splining_method));
 
         std::string full_topic_name = task_recorder_specification.topic_name;
@@ -411,6 +411,7 @@ namespace task_recorder
         ROS_VERIFY(usc_utilities::write(private_node_handle, "variable_names", default_data_sample.names));
         default_data_sample.data.resize(default_data_sample.names.size(), 0.0);
         message_buffer_.reset(new task_recorder_utilities::MessageRingBuffer(default_data_sample));
+        
         return (initialized_ = true);
     }
 
@@ -696,7 +697,7 @@ namespace task_recorder
             write_raw_data_thread.join();
         }
 
-        ROS_DEBUG("Resampling >%i< messages to >%i< messages for topic >%s<.", (int)recorder_io_.messages_.size(), num_samples, recorder_io_.topic_name_.c_str());
+        ROS_INFO("Resampling >%i< messages to >%i< messages for topic >%s<.", (int)recorder_io_.messages_.size(), num_samples, recorder_io_.topic_name_.c_str());
 
         // then resample
         ROS_VERIFY(resample(recorder_io_.messages_, start_time, end_time, num_samples, message_names, filtered_and_cropped_messages));

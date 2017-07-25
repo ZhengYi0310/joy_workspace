@@ -5,7 +5,8 @@
 	> Created Time: Mon 24 Jul 2017 10:06:02 AM PDT
  ************************************************************************/
 
-// system includes 
+// system includes
+#include <sstream>
 #include <usc_utilities/assert.h>
 #include <usc_utilities/param_server.h>
 
@@ -28,18 +29,18 @@ namespace task_recorder
             biotac_serials_.push_back(biotac_states.bt_data[i].bt_serial);
 
             // fill out the data sample
-            data_sample[TDC_INDEX + i * TOTAL_INDEX] = (double)biotac_states.bt_data[i].tdc_data;
-            data_sample[TAC_INDEX + i * TOTAL_INDEX] = (double)biotac_states.bt_data[i].tac_data;
-            data_sample[PDC_INDEX + i * TOTAL_INDEX] = (double)biotac_states.bt_data[i].pdc_data;
+            data_sample.data[TDC_INDEX + i * TOTAL_INDEX] = (double)biotac_states.bt_data[i].tdc_data;
+            data_sample.data[TAC_INDEX + i * TOTAL_INDEX] = (double)biotac_states.bt_data[i].tac_data;
+            data_sample.data[PDC_INDEX + i * TOTAL_INDEX] = (double)biotac_states.bt_data[i].pdc_data;
 
             for (int j = 1; j <= PAC_INDEX; j++)
             {
-                data_sample[PDC_INDEX + j + i * TOTAL_INDEX] = (double)biotac_states.bt_data[i].pac_data[j];
+                data_sample.data[PDC_INDEX + j + i * TOTAL_INDEX] = (double)biotac_states.bt_data[i].pac_data[j];
             }
 
             for (int j = 1; j <= ELEC_INDEX; j++)
             {
-                data_sample[PDC_INDEX + PAC_INDEX + j + i * TOTAL_INDEX] = (double)biotac_states.bt_data[i].electrode_data[j];
+                data_sample.data[PDC_INDEX + PAC_INDEX + j + i * TOTAL_INDEX] = (double)biotac_states.bt_data[i].electrode_data[j];
             }
         }
     }
@@ -48,21 +49,32 @@ namespace task_recorder
     {
         std::vector<std::string> names;
 
-        for (int i = 0; i < num_biotac_sensors_; i++)
+        if (biotac_serials_.size() != 0)
         {
-            names.push_back(biotac_serials_[i] + "_tdc_data");
-            names.push_back(biotac_serials_[i] + "_tac_data");
-            names.push_back(biotac_serials_[i] + "_pdc_data");
-
-            for (int j = 0; j < PAC_INDEX; j++)
+            for (int i = 0; i < num_biotac_sensors_; i++)
             {
-                names.push_back(biotac_serials_[j] + "_pac_data_" + j);
-            }
+                names.push_back(biotac_serials_[i] + "_tdc_data");
+                names.push_back(biotac_serials_[i] + "_tac_data");
+                names.push_back(biotac_serials_[i] + "_pdc_data");
+            
+                for (int j = 0; j < PAC_INDEX; j++)
+                {
+                    std::stringstream ss;
+                    ss << j;
+                    names.push_back(biotac_serials_[j] + "_pac_data_" + ss.str());
+                }
 
-            for (int j = 0; j < ELEC_INDEX; j++)
-            {
-                names.push_back(biotac_serials_[j] + "_elec_data_" + j);
+                for (int j = 0; j < ELEC_INDEX; j++)
+                {
+                    std::stringstream ss;
+                    ss << j;
+                    names.push_back(biotac_serials_[j] + "_elec_data_" + ss.str());
+                }
             }
+        }
+        else 
+        {
+            names.reserve(100);
         }
         return names;
     }

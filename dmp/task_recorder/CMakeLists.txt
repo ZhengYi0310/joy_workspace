@@ -116,7 +116,8 @@ add_library(${PROJECT_NAME}
 	src/task_recorder/joint_states_recorder.cpp
 	src/task_recorder/pose_recorder.cpp
 	src/task_recorder/tf_recorder.cpp
-        src/task_recorder/arm_cartesian_recorder.cpp
+        src/task_recorder/arm_cartesian_state_recorder.cpp
+	src/task_recorder/biotac_state_recorder.cpp
 	
 )
 target_link_libraries(${PROJECT_NAME} ${orocos_kdl_LIBRARIES} ${catkin_LIBRARIES} ${EIGEN_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_LIBRARIES} ${Boost_THREAD_LIBRARIES})

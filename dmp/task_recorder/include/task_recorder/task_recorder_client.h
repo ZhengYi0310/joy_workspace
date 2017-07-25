@@ -84,6 +84,11 @@ namespace task_recorder
                                const ros::Time& end_time,
                                const int num_samples,
                                const std::vector<std::string>& message_names);
+
+            task_recorder::StartRecording::Response getStartRecordingResponse()
+            {
+                return start_response;
+            }
         
             /*!
              */
@@ -99,6 +104,10 @@ namespace task_recorder
              */
             ros::ServiceClient start_recording_service_client_;
             ros::ServiceClient stop_recording_service_client_;
+            task_recorder::StartRecording::Request start_request;
+            task_recorder::StartRecording::Response start_response;
+            task_recorder::StopRecording::Request stop_request;
+            task_recorder::StopRecording::Response stop_response;
     };
 
     template<class MessageType>
@@ -131,9 +140,9 @@ namespace task_recorder
     template<class MessageType>
     bool TaskRecorderClient<MessageType>::startRecording(const task_recorder::Description& description)
     {
-        task_recorder::StartRecording::Request start_request;
+        //task_recorder::StartRecording::Request start_request;
         start_request.description = description;
-        task_recorder::StartRecording::Response start_response;
+        //task_recorder::StartRecording::Response start_response;
 
         bool service_online = false;
         ROS_INFO("Waiting for >%s< ...", start_recording_service_client_.getService().c_str());
@@ -164,8 +173,8 @@ namespace task_recorder
     {
         messages_.clear();
 
-        task_recorder::StopRecording::Request stop_request;
-        task_recorder::StopRecording::Response stop_response;
+        //task_recorder::StopRecording::Request stop_request;
+        //task_recorder::StopRecording::Response stop_response;
         stop_request.crop_start_time = start_time;
         stop_request.crop_end_time = end_time;
         stop_request.num_samples = num_samples;
