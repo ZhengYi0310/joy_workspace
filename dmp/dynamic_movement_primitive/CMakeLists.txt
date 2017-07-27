@@ -188,6 +188,7 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} dmp++ lwr)
 #rosbuild_link_boost(${PROJECT_NAME} system filesystem) 
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${catkin_LIBRARIES}) 
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${PROJECT_NAME}_gencpp)
 
  
 

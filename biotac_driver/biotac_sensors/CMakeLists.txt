@@ -25,6 +25,7 @@ generate_messages(
 
 add_library(biotacpub src/biotac.c src/cheetah.c src/biotac_hand_class.cpp)
 target_link_libraries(biotacpub ${catkin_LIBRARIES} -ldl)
+add_dependencies(biotacpub ${PROJECT_NAME}_gencpp)
 
 catkin_package(
   DEPENDS 

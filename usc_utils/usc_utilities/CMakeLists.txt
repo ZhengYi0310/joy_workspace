@@ -81,6 +81,7 @@ add_library(usc_utilities
 	src/sl_config_file_handler.cpp
 )
 target_link_libraries(usc_utilities ${orocos_kdl_LIBRARIES} ${catkin_LIBRARIES})
+add_dependencies(usc_utilities ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS} usc_utilities_gencpp)
 
 
 

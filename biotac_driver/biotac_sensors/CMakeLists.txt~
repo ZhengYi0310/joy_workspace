@@ -30,7 +30,7 @@ catkin_package(
   DEPENDS 
   CATKIN_DEPENDS message_runtime roscpp cheetah_lib std_msgs
   INCLUDE_DIRS include
-  LIBRARIES
+  LIBRARIES biotacpub
 )
 
 add_executable(biotac_pub src/biotac.c src/cheetah.c src/biotac_hand_class.cpp src/biotac_pub.cpp)

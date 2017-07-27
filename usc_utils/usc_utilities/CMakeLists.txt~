@@ -70,7 +70,7 @@ include_directories(
 
 catkin_package(INCLUDE_DIRS include
                LIBRARIES usc_utilities
-	       CATKIN_DEPENDS rostest cmake_modules geometry_msgs message_runtime roscpp roslib tf trajectory_msgs rosconsole kdl_parser visualization_msgs rosbag bspline
+	       CATKIN_DEPENDS rostest cmake_modules geometry_msgs std_msgs message_runtime roscpp roslib tf trajectory_msgs rosconsole kdl_parser visualization_msgs rosbag bspline
                DEPENDS Eigen Eigen3 Orocos_kdl)
 
 add_library(usc_utilities

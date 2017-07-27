@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>dmp</name>
+  <name>wam</name>
   <version>0.0.0</version>
-  <description>The dmp package</description>
+  <description>The usc_utils package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
@@ -19,7 +19,7 @@
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/dmp</url> -->
+  <!-- <url type="website">http://wiki.ros.org/usc_utils</url> -->
 
 
   <!-- Author tags are optional, mutiple are allowed, one per tag -->
@@ -40,21 +40,15 @@
   <!-- Use test_depend for packages you need only for testing: -->
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-  <run_depend>dynamic_movement_primitive</run_depend> 
-  <run_depend>dynamic_movement_primitive_utilities</run_depend> 
-  <run_depend>skill_library</run_depend> 
-  <run_depend>task_msgs</run_depend> 
-  <run_depend>dmp_behavior_actions</run_depend> 
-  <run_depend>dmp_behaviors</run_depend> 
-  <run_depend>dynamic_movement_primitive_controller_test</run_depend>
-  <run_depend>recorder</run_depend>
-  <run_depend>task_related</run_depend>
-  <run_depend>task_recorder</run_depend>
-
+  <run_depend>wam_common</run_depend>
+  <run_depend>wam_robot</run_depend>
+  <run_depend>wam_dmp_controller</run_depend>
+ 
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
+    <metapackage/>
 
   </export>
 </package>

@@ -1,0 +1,3 @@
+<library path="lib/libwam_dmp_controller">
+  <class name="wam_dmp_controller/DMPJointPositionController" type="wam_dmp_controller::DMPJointPositionController" base_class_type="pr2_controller_interface::ControllerBase" />
+</library>

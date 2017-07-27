@@ -48,7 +48,6 @@
   <run_depend>dmp_behaviors</run_depend> 
   <run_depend>dynamic_movement_primitive_controller_test</run_depend>
   <run_depend>recorder</run_depend>
-  <run_depend>task_related</run_depend>
   <run_depend>task_recorder</run_depend>
 
 
