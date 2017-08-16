@@ -1,7 +1,7 @@
 <launch>
 	<arg name="model" />
 	<arg name="gui" default="True" />
-	<arg name="rvizconfig" default="$(find barrett_model)/urdf.rviz" />
+	
     <!-- Launchfile Arguments (optional)-->
     <arg name="robot_name" default="wam"/>
     <param name="root_link" value="$(arg robot_name)/FixedLink"/>

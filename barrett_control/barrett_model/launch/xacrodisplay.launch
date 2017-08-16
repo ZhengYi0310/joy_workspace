@@ -1,6 +1,6 @@
 <launch>
 	<arg name="model" />
-	<arg name="gui" default="True" />
+	<arg name="gui" default="false" />
 	
     <!-- Launchfile Arguments (optional)-->
     <arg name="robot_name" default="wam"/>
