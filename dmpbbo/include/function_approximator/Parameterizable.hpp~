@@ -11,7 +11,7 @@
 
 #include <boost/serialization/nvp.hpp>
 
-namespace function_approximators
+namespace function_approximator
 {
     /** \brief Class for providing access to a model's parameters as a vector.
      *

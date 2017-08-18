@@ -10,9 +10,9 @@
 #include <limits>
 
 #include <eigen3/Eigen/Core>
-#include <function_approximators/Parameterizable.hpp>
+#include <function_approximator/Parameterizable.hpp>
 using namespace std;
-namespace function_approximators
+namespace function_approximator
 {
 
     void Parameterizable::setSelectedParameters(const std::set<std::string>& selected_parameters_labels)
