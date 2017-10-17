@@ -169,6 +169,8 @@ target_link_libraries(dmp_test dmp++)
 add_library(locally_weighted_regression
 	src/locally_weighted_regression.cpp
 )
+add_dependencies(locally_weighted_regression ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${PROJECT_NAME}_gencpp)
+
 target_link_libraries(locally_weighted_regression lwr)
 target_link_libraries(locally_weighted_regression ${Boost_LIBRARIES})
 

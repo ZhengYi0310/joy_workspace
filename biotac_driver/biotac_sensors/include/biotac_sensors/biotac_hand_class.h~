@@ -75,9 +75,8 @@ private:
   BioTac  getBioTacProperties();
   BioTac  configureBatch();
   void    displayErrors(BioTac bt_err_code);
-  
-public:
   biotac_sensors::BioTacHand collectBatch();
+public:
   BioTacHandClass(string hand_id);
   ~BioTacHandClass();
   void initBioTacSensors();

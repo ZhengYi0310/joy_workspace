@@ -35,54 +35,53 @@
 * Author: Ian McMahon (imcmahon@grasp.upenn.edu)
 *********************************************************************/
 
-#ifndef BIOTACHANDCLASS_H_
-#define BIOTACHANDCLASS_H_
-
-
 #include <ros/ros.h>
+#include <biotac_sensors/biotac_hand_class.h>
 #include <biotac_sensors/BioTacHand.h>
-#include <vector>
-#include <string>
 
 using namespace std;
+using namespace biotac;
 
-namespace biotac {
 
-extern "C"{
-#include <biotac_sensors/biotac.h>
-}
-
-struct finger_info {
-  string finger_serial;
-  int finger_position;
-};
-
-class BioTacHandClass
+int main(int argc, char** argv)
 {
-private:
-  bt_info biotac_;
-  Cheetah ch_handle_;
-  int number_of_samples_;
-  std::vector<finger_info> biotac_serial_no_info_;
-  string hand_id_;
-  ros::Time frame_start_time_;
+  //Initialize ROS node
+  ros::init(argc, argv, "biotac_sensors_pub", ros::init_options::AnonymousName);
+  ros::NodeHandle n;
+  //Loop at 100Hz
+  ros::Rate loop_rate(100);
+  //Advertise on "biotac_pub" topic
+  ros::Publisher biotac_pub = n.advertise<biotac_sensors::BioTacHand>("biotac_pub", 1000);
+  //Create a blank message to publish
+  biotac_sensors::BioTacHand bt_hand_msg;
+  //Check if a null_message parameter was set & publish zero data if so
+  if(n.hasParam(ros::this_node::getName() + "/null_msg"))
+  {
+    biotac_sensors::BioTacData biotac_finger;
+    bt_hand_msg.bt_data.push_back(biotac_finger);
+    bt_hand_msg.bt_data[0].bt_serial = "Foo";
+    bt_hand_msg.bt_data.push_back(biotac_finger);
+    bt_hand_msg.bt_data[1].bt_serial = "Bar";
+    bt_hand_msg.hand_id = "Null_Data";
+    while(ros::ok())
+    {
+      biotac_pub.publish(bt_hand_msg);
+      loop_rate.sleep();
+    }
+  }
+  else //Start the node normally
+  {
+    //Name the BioTac hand that will be published
+    BioTacHandClass left_hand("left_hand");
+    //Connect to and configure the sensors
+    left_hand.initBioTacSensors();
 
-  biotac_sensors::BioTacHand bt_hand_msg_;
-
-  enum{ PAC = 0, PDC = 1, TAC = 2, \
-        TDC = 3, ELEC_LO = 17, ELEC_HI = 35};
-
-  BioTac  getBioTacProperties();
-  BioTac  configureBatch();
-  void    displayErrors(BioTac bt_err_code);
-  
-public:
-  biotac_sensors::BioTacHand collectBatch();
-  BioTacHandClass(string hand_id);
-  ~BioTacHandClass();
-  void initBioTacSensors();
-  
-};
-
+    while(ros::ok())
+    { //Collect a batch of data
+      //bt_hand_msg = left_hand.collectBatch();
+      biotac_pub.publish(bt_hand_msg);
+      loop_rate.sleep();
+    }
+  }
+  return 0;
 }
-#endif

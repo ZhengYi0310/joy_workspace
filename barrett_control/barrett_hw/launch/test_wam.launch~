@@ -61,9 +61,6 @@
     joint_state_controller:
       type: joint_state_controller/JointStateController
       publish_rate: 50
-    arm_cartesian_state_controller:
-      type: barrett_hw/ArmCartesianStateController
-      publish_rate: 50
     biotac_state_controller:
       type: barrett_hw/BioTacStateController
       publish_rate: 50
@@ -76,7 +73,7 @@
 
   <node name="default_controller_spawner"
     pkg="controller_manager" type="spawner" output="screen"
-    args="wam/joint_state_controller wam/robot_states_publisher"/>
+    args="wam/robot_states_publisher wam/joint_state_controller"/>
 
 
 </launch>

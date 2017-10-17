@@ -33,8 +33,8 @@ int main(int argc, char **argv)
     task_recorder::CartesianStateRecorder arm_cartesian_state_recorder(node_handle);
     ROS_VERIFY(arm_cartesian_state_recorder.initialize());
 
-    //task_recorder::BioTacStateRecorder biotac_state_recorder(node_handle);
-    //ROS_VERIFY(biotac_state_recorder.initialize());
+    task_recorder::BioTacStateRecorder biotac_state_recorder(node_handle);
+    ROS_VERIFY(biotac_state_recorder.initialize());
 
     //task_recorder::TFRecorder tf_recorder(node_handle);
     //ROS_VERIFY(tf_recorder.initialize());

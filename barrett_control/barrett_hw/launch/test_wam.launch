@@ -1,5 +1,7 @@
+
 <launch>
   <!-- Launch several pieces of barrett hardware -->
+
   <arg name="CONFIG_LEFT" default="/etc/barrett/default.conf"/>
   <arg name="BUS_LEFT" default="/etc/barrett/default.conf"/>
 
@@ -7,23 +9,16 @@
   <param name="barrett/busses/rtcan_left/config" value="$(arg CONFIG_LEFT)"/>
   <param name="barrett/busses/rtcan_left/bus" value="$(arg BUS_LEFT)"/>
 
-  <!-- Realtime parameter -->
-  <param name="barrett/verbose" value="true"/>
-  <param name="barrett/period" value="0.004" type="double"/>
-
   <!-- Products -->
   <rosparam ns="barrett">
-    urdf_file_path: /home/robot/yzheng_ws/src/barrett_control/barrett_model/robots/wam7_bhand.urdf
     product_names:
     -  "wam_left"
-    - "bhand_left"
+    #- "bhand_left"
     products:
       wam_left:
         bus: "rtcan_left"
         type: "wam"
         tip_joint: "left_wam/palm_yaw_joint"
-        tip_segment: "left_wam/wrist_palm_link"
-        root_segment: "left_wam/base_link"
       bhand_left:
         bus: "rtcan_left"
         type: "hand"
@@ -38,14 +33,12 @@
   <include ns="barrett" file="$(find barrett_model)/launch/xacrodisplay.launch"/>
   
   <arg name="rvizconfig" default="$(find barrett_model)/urdf.rviz" /> 
-  <!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"> -->
-  <!--   <param name="/use_gui" value="true"/> --> 
-  <!--   <rosparam param="/source_list">["/joint_states"]</rosparam> --> 
-  <!--   <remap from="joint_states" to="JSP/joint_states" /> --> 
-  <!--   <remap from="robot_description" to="barrett/robot_description_yi" /> -->
-  <!-- </node> --> 
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"> 
+     <rosparam param="/source_list">[/joint_states]</rosparam> 
+     <remap from="robot_description" to="barrett/robot_description_yi" /> 
+  </node> 
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"> 
-     <!-- <remap from ="joint_states" to="JSP/joint_states" /> -->
+     <remap from ="joint_states" to="/joint_states" /> 
      <remap from="robot_description" to="barrett/robot_description_yi" /> 
   </node> 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true"> 
@@ -61,22 +54,14 @@
     joint_state_controller:
       type: joint_state_controller/JointStateController
       publish_rate: 50
-    arm_cartesian_state_controller:
-      type: barrett_hw/ArmCartesianStateController
-      publish_rate: 50
-    biotac_state_controller:
-      type: barrett_hw/BioTacStateController
-      publish_rate: 50
-    robot_states_publisher:
+    robot_states_controller:
       type: barrett_hw/RobotStatesPublisher
       publish_rate: 50
-      tactile: false
-
   </rosparam>
 
   <node name="default_controller_spawner"
     pkg="controller_manager" type="spawner" output="screen"
-    args="wam/robot_states_publisher"/>
+    args="wam/joint_state_controller wam/robot_states_publisher"/>
 
 
 </launch>
