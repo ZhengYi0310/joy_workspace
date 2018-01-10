@@ -10,6 +10,7 @@ import csv
 import sys
 import os.path, time
 
+
 class DataSampleBagFileParser:
     def __init__(self, topicname):
         self.data_samples_topic = topicname
