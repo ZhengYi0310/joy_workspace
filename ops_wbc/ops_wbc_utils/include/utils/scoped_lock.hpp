@@ -1,5 +1,5 @@
-#ifndef __OPS_UTILS_SCOPED_LOCK
-#define __OPS_UTILS_SCOPED_LOCK
+#ifndef __OPS_WBC_UTILS_SCOPED_LOCK
+#define __OPS_WBC_UTILS_SCOPED_LOCK
 
 #include <memory>
 #include <mutex>
@@ -25,4 +25,4 @@ namespace ops_wbc_utils
     };
 }
 
-#endif // __OPS_UTILS_SCOPED_LOCK
+#endif // __OPS_WBC_UTILS_SCOPED_LOCK

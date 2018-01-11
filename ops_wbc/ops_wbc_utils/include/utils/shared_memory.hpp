@@ -1,5 +1,5 @@
-#ifndef __OPS_UTILS_SHARED_MEMORY_HPP
-#define __OPS_UTILS_SHARED_MEMORY_HPP
+#ifndef __OPS_WBC_UTILS_SHARED_MEMORY_HPP
+#define __OPS_WBC_UTILS_SHARED_MEMORY_HPP
 
 #include <string>
 #include <memory>
@@ -84,4 +84,4 @@ namespace ops_wbc_utils
     using SharedMemoryPtr = std::shared_ptr<SharedMemory<T> >;
 }
 
-#endif // __OPS_UTILS_SHARED_MEMORY_HPP 
+#endif // __OPS_WBC_UTILS_SHARED_MEMORY_HPP 

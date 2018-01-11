@@ -15,14 +15,14 @@ namespace ops_wbc_utils
     }
 
     std::string what() throw()
-      {
-        std::stringstream msg;
-        msg << "ahl_utils::Exception was thrown." << std::endl
-            << "  src : " << src_ << std::endl
-            << "  msg : " << msg_;
+    {
+      std::stringstream msg;
+      msg << "ops_wbc_utils::Exception was thrown." << std::endl
+          << "  src : " << src_ << std::endl
+          << "  msg : " << msg_;
 
-        return msg.str();
-      }
+      return msg.str();
+    }
 
   private:
     std::string src_;

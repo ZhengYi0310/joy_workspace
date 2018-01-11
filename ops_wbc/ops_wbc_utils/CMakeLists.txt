@@ -46,6 +46,8 @@ add_library(ops_wbc_utils
   src/io_utils.cpp
   src/str_utils.cpp
   src/shared_memory.cpp
+  src/yaml_loader.cpp
+  src/yaml_utils.cpp
 )
 target_link_libraries(ops_wbc_utils
   ${catkin_LIBRARIES}
@@ -53,4 +55,10 @@ target_link_libraries(ops_wbc_utils
   rt
   yaml-cpp
 )
+
+add_executable(shm_reader test/shm_reader.cpp)
+target_link_libraries(shm_reader ops_wbc_utils)
+
+add_executable(shm_writer test/shm_writer.cpp)
+target_link_libraries(shm_writer ops_wbc_utils)
 
