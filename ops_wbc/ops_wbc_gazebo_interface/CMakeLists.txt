@@ -59,6 +59,7 @@ catkin_package(
 
 add_library(ops_wbc_gazebo_interface
   src/force_sensor.cpp
+  src/torque_sensor.cpp
 )
 add_dependencies(ops_wbc_gazebo_interface gazebo_msgs_gencpp)
 target_link_libraries(ops_wbc_gazebo_interface ${catkin_LIBRARIES})
