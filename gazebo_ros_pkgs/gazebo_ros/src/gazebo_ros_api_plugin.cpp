@@ -33,6 +33,7 @@ GazeboRosApiPlugin::GazeboRosApiPlugin() :
   stop_(false),
   plugin_loaded_(false),
   pub_link_states_connection_count_(0),
+  pub_joint_states_connection_count_(0),
   pub_model_states_connection_count_(0)
 {
   robot_namespace_.clear();
@@ -62,6 +63,8 @@ GazeboRosApiPlugin::~GazeboRosApiPlugin()
 
   if (pub_link_states_connection_count_ > 0) // disconnect if there are subscribers on exit
     gazebo::event::Events::DisconnectWorldUpdateBegin(pub_link_states_event_);
+  if (pub_joint_states_connection_count_ > 0)
+    gazebo::event::Events::DisconnectWorldUpdateBegin(pub_joint_states_event_);
   if (pub_model_states_connection_count_ > 0) // disconnect if there are subscribers on exit
     gazebo::event::Events::DisconnectWorldUpdateBegin(pub_model_states_event_);
   ROS_DEBUG_STREAM_NAMED("api_plugin","Disconnected World Updates");
@@ -187,6 +190,7 @@ void GazeboRosApiPlugin::loadGazeboRosApiPlugin(std::string world_name)
 
   // reset topic connection counts
   pub_link_states_connection_count_ = 0;
+  pub_joint_states_connection_count_ = 0;
   pub_model_states_connection_count_ = 0;
 
   /// \brief advertise all services
@@ -325,6 +329,14 @@ void GazeboRosApiPlugin::advertiseServices()
                                                            ros::VoidPtr(), &gazebo_queue_);
   pub_link_states_ = nh_->advertise(pub_link_states_ao);
 
+  // publish joint states in world frame 
+  ros::AdvertiseOptions pub_joint_states_ao = 
+    ros::AdvertiseOptions::create<gazebo_msgs::JointStates>(
+                                                            "joint_states",10,
+                                                            boost::bind(&GazeboRosApiPlugin::onJointStatesConnect, this),
+                                                            boost::bind(&GazeboRosApiPlugin::onJointStatesDisconnect, this),
+                                                            ros::VoidPtr(), &gazebo_queue_);
+
   // publish complete model states in world frame
   ros::AdvertiseOptions pub_model_states_ao =
     ros::AdvertiseOptions::create<gazebo_msgs::ModelStates>(
@@ -396,6 +408,15 @@ void GazeboRosApiPlugin::advertiseServices()
                                                           boost::bind( &GazeboRosApiPlugin::updateLinkState,this,_1),
                                                           ros::VoidPtr(), &gazebo_queue_);
   set_link_state_topic_ = nh_->subscribe(link_state_so);
+
+  // Advertise topic on custom queue 
+  // topic callback version for set_link_states 
+  ros::SubscribeOptions link_states_so = 
+    ros::SubscribeOptions::create<gazebo_msgs::LinkStates>(
+                                                           "set_link_states",10,
+                                                           boost::bind(&GazeboRosApiPlugin::updateLinkStates, this,_1),
+                                                           ros::VoidPtr(), &gazebo_queue_);
+  set_link_states_topic_ = nh_->subscribe(link_states_so);
 
   // topic callback version for set_model_state
   ros::SubscribeOptions model_state_so =
@@ -477,6 +498,19 @@ void GazeboRosApiPlugin::advertiseServices()
                                                           ros::VoidPtr(), &gazebo_queue_);
   reset_world_service_ = nh_->advertiseService(reset_world_aso);
 
+  // Advertise services for torque control and set up relavant timers 
+  server_start_timer_       = nh_->advertiseService("start_timer",       &GazeboRosApiPlugin::startTimerServiceCB, this);
+  server_add_joint_         = nh_->advertiseService("add_joint",         &GazeboRosApiPlugin::addJointServiceCB, this);
+  server_add_torque_sensor_ = nh_->advertiseService("add_torque_sensor", &GazeboRosApiPlugin::addTorqueSensorServiceCB, this);
+  server_add_force_sensor_  = nh_->advertiseService("add_force_sensor",  &GazeboRosApiPlugin::addForceSensorServiceCB, this);
+  
+  timer_read_joint_efforts_ = nh_->createTimer(ros::Duration(0.001),     &GazeboRosApiPlugin::readJointEffortsTimerCB, this, false, false);
+  timer_write_joint_states_ = nh_->createTimer(ros::Duration(0.001),     &GazeboRosApiPlugin::writeJointStatesTimerCB, this, false, false);
+  timer_write_forces_       = nh_->createTimer(ros::Duration(0.001),     &GazeboRosApiPlugin::writeForcesTimerCB, this, false, false);
+  
+
+
+
 
   // set param for use_sim_time if not set by user already
   nh_->setParam("/use_sim_time", true);
@@ -492,6 +526,12 @@ void GazeboRosApiPlugin::onLinkStatesConnect()
     pub_link_states_event_   = gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&GazeboRosApiPlugin::publishLinkStates,this));
 }
 
+void GazeboRosApiPlugin::onJointStatesConnect()
+{
+    pub_joint_states_connection_count_++;
+    if (pub_joint_states_connection_count_ == 1)
+        pub_joint_states_event_ = gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&GazeboRosApiPlugin::publishJointStates, this));
+}
 void GazeboRosApiPlugin::onModelStatesConnect()
 {
   pub_model_states_connection_count_++;
@@ -508,6 +548,17 @@ void GazeboRosApiPlugin::onLinkStatesDisconnect()
     if (pub_link_states_connection_count_ < 0) // should not be possible
       ROS_ERROR("one too mandy disconnect from pub_link_states_ in gazebo_ros.cpp? something weird");
   }
+}
+
+void GazeboRosApiPlugin::onJointStatesDisconnect()
+{
+    pub_joint_states_connection_count_--;
+    if (pub_joint_states_connection_count_ <= 0) // disconnect with no subscribers
+    {
+        gazebo::event::Events::DisconnectWorldUpdateBegin(pub_joint_states_event_);
+        if (pub_joint_states_connection_count_ < 0) // should not be possible 
+            ROS_ERROR("one too mandy disconnect from pub_joint_states_ in gazebo_ros.cpp? somethine weird");
+    }
 }
 
 void GazeboRosApiPlugin::onModelStatesDisconnect()
@@ -1566,6 +1617,57 @@ void GazeboRosApiPlugin::updateLinkState(const gazebo_msgs::LinkState::ConstPtr&
   /*bool success = */ setLinkState(req,res);
 }
 
+void GazeboRosApiPlugin::updateLinkStates(const gazebo_msgs::LinkStates::ConstPtr& link_states)
+{
+    std::vector<gazebo::math::Pose> target_pose(link_states->name.size());
+
+    gazebo::physics::LinkPtr body;
+    gazebo::physics::LinkPtr frame;
+
+    for (uint32_t i = 0; i < link_states->name.size(); i++)
+    {
+        body = boost::dynamic_pointer_cast<gazebo::physics::Link>(world_->GetEntity(link_states->name[i]));
+        frame = boost::dynamic_pointer_cast<gazebo::physics::Link>(world_->GetEntity(link_states->reference_frame[i]));
+
+        if (!body)
+        {
+            ROS_ERROR("Updating LinkState: link [%s] does not exist",link_states->name[i].c_str());
+            return;
+        }
+
+        gazebo::math::Vector3 target_pos(link_states->pose[i].position.x, link_states->pose[i].position.y, link_states->pose[i].position.z);
+        gazebo::math::Quaternion target_rot(link_states->pose[i].orientation.w, link_states->pose[i].orientation.x, 
+                                             link_states->pose[i].orientation.y, link_states->pose[i].orientation.z);
+        target_pose[i] = gazebo::math::Pose(target_pos, target_rot);
+
+        if (frame)
+        {
+            gazebo::math::Pose frame_pose      = frame->GetWorldPose(); //
+            gazebo::math::Vector3 frame_pos    = frame_pose.pos;
+            gazebo::math::Quaternion frame_rot = frame_pose.rot;
+
+            target_pose[i].pos = frame_pos + frame_rot.RotateVector(target_pos);
+            target_pose[i].rot = frame_rot * target_pose[i].rot;
+        }
+
+        else if(link_states->reference_frame[i] == "" || link_states->reference_frame[i] == "world" || link_states->reference_frame[i] == "map" || link_states->reference_frame[i] == "/map")
+        {
+            ROS_INFO("Updating LinkState: reference_frame is empty/world/map, using inertial frame");
+        }
+        else
+        {
+            ROS_ERROR("Updating LinkState: reference_frame is not a valid link name");
+            return;
+        }
+
+        bool is_paused = world_->IsPaused();
+        if (!is_paused)
+            world_->SetPaused(true);
+        body->SetWorldPose(target_pose[i]);
+        world_->SetPaused(is_paused);
+    }
+}
+
 void GazeboRosApiPlugin::transformWrench( gazebo::math::Vector3 &target_force, gazebo::math::Vector3 &target_torque,
                                           gazebo::math::Vector3 reference_force, gazebo::math::Vector3 reference_torque,
                                           gazebo::math::Pose target_to_reference )
@@ -1713,6 +1815,153 @@ bool GazeboRosApiPlugin::isSDF(std::string model_xml)
     return false;
 }
 
+bool GazeboRosApiPlugin::startTimerServiceCB(gazebo_msgs::StartTimer::Request& req, gazebo_msgs::StartTimer::Response& res)
+{
+    if (req.duration_read_joint_efforts <= 0)
+    {
+        timer_read_joint_efforts_.setPeriod(ros::Duration(0.001));
+    }
+    else 
+    {
+        timer_read_joint_efforts_.setPeriod(ros::Duration(req.duration_read_joint_efforts));
+    }
+
+    if (req.duration_write_joint_states <= 0)
+    {
+        timer_write_joint_states_.setPeriod(ros::Duration(0.001));
+    }
+    else 
+    {
+        timer_write_joint_states_.setPeriod(ros::Duration(req.duration_write_joint_states));
+    }
+
+    if (req.duration_write_forces <= 0)
+    {
+        timer_write_forces_.setPeriod(ros::Duration(0.001));
+    }
+    else 
+    {
+        timer_write_forces_.setPeriod(ros::Duration(req.duration_write_forces));
+    }
+
+    timer_read_joint_efforts_.start();
+    timer_write_joint_states_.start();
+    timer_write_forces_.start();
+
+    return true;
+}
+
+bool GazeboRosApiPlugin::addForceSensorServiceCB(gazebo_msgs::AddForceSensor::Request& req, gazebo_msgs::AddForceSensor::Response& res)
+{
+    if (external_force_x_.find(req.joint_name) == external_force_x_.end() && 
+        external_force_y_.find(req.joint_name) == external_force_y_.end() &&
+        external_force_z_.find(req.joint_name) == external_force_z_.end() &&
+        external_moment_x_.find(req.joint_name) == external_moment_x_.end() &&
+        external_moment_y_.find(req.joint_name) == external_moment_y_.end() &&
+        external_moment_z_.find(req.joint_name) == external_moment_z_.end())
+    {
+        std::cout << "Adding force sensor : " << req.sensor_name << std::endl;
+        external_force_x_[req.joint_name] = std::make_shared<gazebo::SharedMemory<double>>(req.sensor_name + "::fx");
+        external_force_y_[req.joint_name] = std::make_shared<gazebo::SharedMemory<double>>(req.sensor_name + "::fy");
+        external_force_z_[req.joint_name] = std::make_shared<gazebo::SharedMemory<double>>(req.sensor_name + "::fz");
+        external_moment_x_[req.joint_name] = std::make_shared<gazebo::SharedMemory<double>>(req.sensor_name + "::mx");
+        external_moment_y_[req.joint_name] = std::make_shared<gazebo::SharedMemory<double>>(req.sensor_name + "::my");
+        external_moment_z_[req.joint_name] = std::make_shared<gazebo::SharedMemory<double>>(req.sensor_name + "::mz");
+
+        bool joint_found = false;
+        for (uint32_t i = 0; i < world_->GetModelCount(); i++)
+        {
+            gazebo::physics::JointPtr joint;
+            joint = world_->GetModel(i)->GetJoint(req.joint_name);
+
+            if (joint)
+            {
+                joint_found = true;
+                joint_[req.joint_name] = joint;
+                force_sensor_to_joint_[req.sensor_name] = req.joint_name;
+            }
+        }
+
+        if (!joint_found)
+        {
+            std::stringstream msg;
+            msg << "src : GazeboRosApiPlugin::addForceSensorServiceCB" << std::endl 
+                << "msg : Could not find joint : " << req.joint_name << std::endl;
+            ROS_ERROR_STREAM(msg.str());
+            return false;
+        }
+    }
+    return true;
+}
+
+bool GazeboRosApiPlugin::addJointServiceCB(gazebo_msgs::AddJoint::Request& req, gazebo_msgs::AddJoint::Response& res)
+{
+    if (joint_effort_.find(req.name) == joint_effort_.end())
+    {
+        std::cout << "Add joint : " << req.name << std::endl;
+        joint_states_[req.name]  = std::make_shared<gazebo::SharedMemory<double>>(req.name + "::states");
+        joint_effort_[req.name] = std::make_shared<gazebo::SharedMemory<double>>(req.name + "::effort");
+        effort_time_[req.name]  = ros::Duration(req.effort_time);
+
+        bool joint_found = false;
+        for (uint32_t i = 0; i < world_->GetModelCount(); i++)
+        {
+            gazebo::physics::JointPtr joint;
+            joint = world_->GetModel(i)->GetJoint(req.name);
+
+            if (joint)
+            {
+                joint_found = true;
+                joint_[req.name] = joint;
+            }
+        }
+
+        if (!joint_found)
+        {
+            std::stringstream msg;
+            msg << "src : GazeboRosApiPlugin::addJointServiceCB" << std::endl 
+                << "msg : Could not find joint : " << req.name << std::endl;
+            ROS_ERROR_STREAM(msg.str());
+            return false;
+        }
+        
+    }
+    return true;
+}
+
+bool GazeboRosApiPlugin::addTorqueSensorServiceCB(gazebo_msgs::AddTorqueSensor::Request& req, gazebo_msgs::AddTorqueSensor::Response& res)
+{
+    if (joint_torque_.find(req.joint_name) == joint_torque_.end())
+    {
+        std::cout << "Adding torque sensor : " << req.sensor_name << std::endl;
+        joint_torque_[req.sensor_name] = std::make_shared<gazebo::SharedMemory<double>>(req.sensor_name);
+
+        bool joint_found = false;
+        for (uint32_t i = 0; i < world_->GetModelCount(); i++)
+        {
+            gazebo::physics::JointPtr joint;
+            joint = world_->GetModel(i)->GetJoint(req.joint_name);
+
+            if (joint)
+            {
+                joint_found = true;
+                joint_[req.joint_name] = joint;
+                torque_sensor_to_joint_[req.sensor_name] = req.joint_name;
+            }
+        }
+
+        if (!joint_found)
+        {
+            std::stringstream msg;
+            msg << "src : GazeboRosApiPlugin::addTorqueSensorServiceCB" << std::endl 
+                << "msg : Could not find joint : " << req.joint_name << std::endl;
+            ROS_ERROR_STREAM(msg.str());
+            return false;
+        }
+    }
+    return true;
+}
+
 void GazeboRosApiPlugin::wrenchBodySchedulerSlot()
 {
   // MDMutex locks in case model is getting deleted, don't have to do this if we delete jobs first
@@ -1838,6 +2087,28 @@ void GazeboRosApiPlugin::publishLinkStates()
   }
 
   pub_link_states_.publish(link_states);
+}
+
+void GazeboRosApiPlugin::publishJointStates()
+{
+    gazebo_msgs::JointStates joint_states;
+    for (uint32_t i = 0; i < world_->GetModelCount(); i++)
+    {
+        gazebo::physics::ModelPtr model = world_->GetModel(i);
+        for (uint32_t j = 0; j < model->GetChildCount(); j++)
+        {
+
+            gazebo::physics::JointPtr joint = boost::dynamic_pointer_cast<gazebo::physics::Joint>(model->GetChild(j));
+
+            if (joint)
+            {
+                joint_states.name.push_back(joint->GetScopedName());
+                joint_states.q.push_back(joint->GetAngle(0).Radian());
+                joint_states.dq.push_back(joint->GetVelocity(0));
+            }
+        }
+    }
+    pub_joint_states_.publish(joint_states);
 }
 
 void GazeboRosApiPlugin::publishModelStates()
@@ -2291,10 +2562,54 @@ bool GazeboRosApiPlugin::spawnAndConform(TiXmlDocument &gazebo_model_xml, std::s
     usleep(2000);
   }
 
-  // set result
-  res.success = true;
+  // set resultmZ  res.success = true;
   res.status_message = std::string("SpawnModel: Successfully spawned model");
   return true;
+}
+
+
+void GazeboRosApiPlugin::readJointEffortsTimerCB(const ros::TimerEvent& e)
+{
+    double effort = 0.0;
+
+    boost::mutex::scoped_lock lock(lock_);
+    for (auto elem : joint_effort_)
+    {
+        elem.second->read(effort);
+
+        GazeboRosApiPlugin::ForceJointJob* fjj = new GazeboRosApiPlugin::ForceJointJob;
+        fjj->joint = joint_[elem.first];
+        fjj->force = effort;
+        fjj->start_time = ros::Time(world_->GetSimTime().Double());
+        fjj->duration = effort_time_[elem.first];
+        force_joint_jobs_.push_back(fjj);
+    }
+}
+
+void GazeboRosApiPlugin::writeJointStatesTimerCB(const ros::TimerEvent& e)
+{
+    double state = 0.0;
+    boost::mutex::scoped_lock lock(lock_);
+    for (auto elem : joint_states_)
+    {
+        state = joint_[elem.first]->GetAngle(0).Radian();
+        elem.second->write(state);
+    }
+}
+
+void GazeboRosApiPlugin::writeForcesTimerCB(const ros::TimerEvent& e)
+{
+    boost::mutex::scoped_lock lock(lock_);
+    for (auto elem : joint_torque_)
+    {
+        std::string joint_name = torque_sensor_to_joint_[elem.first];
+        double state = joint_[joint_name]->GetForce(0);
+
+        state *= 0.10;
+        elem.second->write(state);
+    }
+
+    gazebo::physics::JointWrench wrench;
 }
 
 // Register this plugin with the simulator
