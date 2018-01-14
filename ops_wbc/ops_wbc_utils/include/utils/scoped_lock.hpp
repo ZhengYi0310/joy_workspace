@@ -21,7 +21,7 @@ namespace ops_wbc_utils
                         
 
         private:
-            std::mutex mutex_;
+            std::mutex& mutex_;
     };
 }
 

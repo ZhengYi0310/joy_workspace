@@ -13,7 +13,7 @@ using namespace ops_wbc_gazebo_interface;
 ForceSensor::ForceSensor()
 {
     ros::NodeHandle nh;
-    client_add_force_sensor_ = nh.serviceClient<ops_wbc_gazebo_interface::AddForceSensor>("/ops_wbc_gazebo_interface/add_force_sensor");
+    client_add_force_sensor_ = nh.serviceClient<gazebo_msgs::AddForceSensor>("/ops_wbc_gazebo_interface/add_force_sensor");
 }
 
 void ForceSensor::add(const std::string& joint_name)
@@ -33,7 +33,7 @@ void ForceSensor::add(const std::string& joint_name)
         my_[sensor_name + "::fx"] = std::make_shared<ops_wbc_utils::SharedMemory<double>>(sensor_name + "::my");
         mz_[sensor_name + "::fx"] = std::make_shared<ops_wbc_utils::SharedMemory<double>>(sensor_name + "::mz");
 
-        ops_wbc_gazebo_interface::AddForceSensor srv;
+        gazebo_msgs::AddForceSensor srv;
         srv.request.joint_name = joint_name;
         srv.request.sensor_name = sensor_name;
 

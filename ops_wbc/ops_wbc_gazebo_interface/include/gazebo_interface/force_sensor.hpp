@@ -6,7 +6,7 @@
 #include <memory>
 #include <Eigen/Dense>
 #include <ros/ros.h>
-#include <ops_wbc_gazebo_interface/AddForceSensor.h>
+#include <gazebo_msgs/AddForceSensor.h>
 #include <utils/shared_memory.hpp>
 
 namespace ops_wbc_gazebo_interface

@@ -6,13 +6,13 @@
 #include <memory>
 #include <Eigen/Dense>
 #include <ros/ros.h>
-#include <ops_wbc_gazebo_interface/AddJoint.h>
+#include <gazebo_msgs/AddJoint.h>
 #include <gazebo_msgs/StartTimer.h>
 #include <gazebo_msgs/LinkStates.h>
-#include <ops_wbc_utils/shared_memory.hpp>
-#include <ops_wbc_utils/scoped_lock.hpp>
-#include "ops_wbc_gazebo_interface/torque_sensor.hpp"
-#include "ops_wbc_gazebo_interface/force_sensor.hpp"
+#include <utils/shared_memory.hpp>
+#include <utils/scoped_lock.hpp>
+#include "gazebo_interface/torque_sensor.hpp"
+#include "gazebo_interface/force_sensor.hpp"
 
 namespace ops_wbc_gazebo_interface
 {
@@ -44,6 +44,10 @@ namespace ops_wbc_gazebo_interface
             // Initialize and connect the communication with gazebo simulator 
             void connect();
 
+            // Check gazebo simulator has already written some value in shared memory.
+            // @return true : already written, false : not written yet
+            bool subscribed();
+
             // Apply torque to registered joint 
             // @param tau Toruqe vector. 
             void applyJointEfforts(const Eigen::VectorXd& tau);
@@ -59,7 +63,7 @@ namespace ops_wbc_gazebo_interface
 
             // Rotate link
             // @param q Quarternion w.r.t parent link frame 
-            void rotateLink(const std::vector<Eigen::Quarternion<double> >& q);
+            void rotateLink(const std::vector<Eigen::Quaternion<double> >& q);
 
             // Get joint angles
             // @return Joint state vector representing joint angles or displacements
@@ -108,7 +112,7 @@ namespace ops_wbc_gazebo_interface
             std::map<std::string, ops_wbc_utils::SharedMemoryPtr<double>> joint_state_;
 
             TorqueSensorPtr torque_sensor_;
-            ForceSensor force_sensor_;
+            ForceSensorPtr force_sensor_;
     };
     using GazeboInterfacePtr = std::shared_ptr<GazeboInterface>;
 }

@@ -13,7 +13,7 @@ using namespace ops_wbc_gazebo_interface;
 TorqueSensor::TorqueSensor()
 {
     ros::NodeHandle nh;
-    client_add_torque_sensor_ = nh.serviceClient<ops_wbc_gazebo_interface::AddTorqueSensor>("ops_wbc_gazebo_interface/add_torque_sensor");
+    client_add_torque_sensor_ = nh.serviceClient<gazebo_msgs::AddTorqueSensor>("/gazebo/add_torque_sensor");
 }
 
 void TorqueSensor::add(const std::string& joint_name)
@@ -28,7 +28,7 @@ void TorqueSensor::add(const std::string& joint_name)
 
         torque_[sensor_name] = std::make_shared<ops_wbc_utils::SharedMemory<double>>(sensor_name);
 
-        ops_wbc_gazebo_interface::AddTorqueSensor srv;
+        gazebo_msgs::AddTorqueSensor srv;
         srv.request.joint_name = joint_name;
         srv.request.sensor_name = sensor_name;
 
