@@ -22,3 +22,27 @@ find_package(catkin REQUIRED
     std_srvs
 )
 
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+)
+
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES ops_wbc_wrappers
+  CATKIN_DEPENDS
+    cv_bridge
+    image_transport
+    message_filters
+    roscpp
+    std_srvs
+)
+
+add_library(ops_wbc_wrappers
+  #src/image_subscriber.cpp
+  src/utils.cpp
+  #src/rect.cpp
+  #src/hsv_mask.cpp
+)
+target_link_libraries(ops_wbc_wrappers ${catkin_LIBRARIES})
+

@@ -20,9 +20,9 @@
 template<class SrcT, class DstT>
 class Labeling
 {
-    public:
+    public: 
         // raster segment ////////////////////////////////////////////////////
-        class RastorSegment
+        class RasterSegment
         {
             private:
                 int left_x_;
@@ -31,12 +31,12 @@ class Labeling
                 SrcT source_value_;
 
             public:
-                explicit RastorSegment(const int n_lext_x, const int n_right_x,
+                explicit RasterSegment(const int n_left_x, const int n_right_x,
                                        const int n_y,      const SrcT n_source_value) : left_x_(n_left_x), right_x_(n_right_x), y_(n_y), source_value_(n_source_value)
                 {
                 }
 
-                ~RastorSegment() = default;
+                ~RasterSegment() = default;
 
                 inline int GetLeftX(void) const 
                 {
@@ -78,7 +78,7 @@ class Labeling
 			        return source_value_;
 		        }
 
-                friend std::ostream& operator<<(std::ostream& s, RastorSegment& rs)
+                friend std::ostream& operator<<(std::ostream& s, RasterSegment& rs)
                 {
                     s << rs.LeftX() << " " 
                       << rs.RightX() << " "
@@ -90,10 +90,11 @@ class Labeling
                 
         };
 
-        typedef std::list<RastorSegment *> RSPList;
+        typedef std::list<RasterSegment *> RSPList;
         typedef typename RSPList::iterator RSPIterator;
-        typedef std::queue<RastorSegment *> RSPQueue;
-
+        typedef std::queue<RasterSegment *> RSPQueue;
+        
+        
         // information about region //////////////////////////////////////
         class RegionInfo 
         {
@@ -106,9 +107,9 @@ class Labeling
                 SrcT source_value_;
                 DstT result_;
                 RSPList raster_segment_list_;
-#if CALC_CENTER_OF_GRAVITY
+    #if CALC_CENTER_OF_GRAVITY
                 float gravity_x_, gravity_y_;
-#endif 
+    #endif 
             public:
                 // Constructor and Destructor 
                 RegionInfo()
@@ -118,11 +119,11 @@ class Labeling
 
                 ~RegionInfo()
                 {
-                    RSPIterator RSPI;
+                    RSPIterator rspi;
                     for (rspi = raster_segment_list_.begin();
                          rspi != raster_segment_list_.end(); rspi++)
                     {
-                        RastorSegment *rs = *rspi;
+                        RasterSegment *rs = *rspi;
                         delete rs;
                     }
                     raster_segment_list_.erase(raster_segment_list_.begin(), raster_segment_list_.end());
@@ -236,12 +237,12 @@ class Labeling
                     return raster_segment_list_;
                 }
 
-                inline void Push(RastorSegment *rs)
+                inline void Push(RasterSegment *rs)
                 {
                     raster_segment_list_.push_front(rs);
                 }
 
-                inline void Pop(RastorSegment *&rs)
+                inline void Pop(RasterSegment *&rs)
                 {
                     RSPIterator rspi = raster_segment_list_.begin();
                     rs = *rspi;
@@ -279,10 +280,10 @@ class Labeling
 			        ri.GetMax(x, y);
 			        s << "max: " << x << ", " << y << std::endl;
 
-#if CALC_CENTER_OF_GRAVITY
+    #if CALC_CENTER_OF_GRAVITY
 			        ri.GetCenterOfGravity(cx, cy);
 			        s << "center_of_graivty: " << cx << "," << cy << std::endl;
-#endif			
+    #endif			
 
                     s << "source_value: "  
 			        << static_cast<int>(ri.GetSourceValue()) << std::endl
@@ -296,10 +297,10 @@ class Labeling
         };
     
         typedef std::list<RegionInfo *> RIPList;
-        typedef RIPList::iterator RIPIterator;
-        typedef std::vector<RegionInfo *> RIPVector;
-
-
+        typedef typename RIPList::iterator RIPIterator;
+        typedef std::vector<RegionInfo *> RIPVector; 
+        
+    
     private:
         static const int DEFAULT_REGION_SIZE_MIN = 10;
 
@@ -308,7 +309,7 @@ class Labeling
         int width_;
         int height_;
         int total_num_;
-
+    
         RSPList* raster_segment_list_;
         int num_of_raster_segments_;
         RSPQueue seed_queue_;
@@ -321,7 +322,7 @@ class Labeling
         void RegisterSegment(const int lx, const int rx,
                              const int y,  const SrcT src_value)
         {
-            RasterSegment *rs = new RastorSegment(lx, rx, y, src_value);
+            RasterSegment *rs = new RasterSegment(lx, rx, y, src_value);
             raster_segment_list_[y].push_back(rs);
             num_of_raster_segments_++;
         }
@@ -336,11 +337,11 @@ class Labeling
             int rs_seed_source_value = rs_seed->SourceValue();
 
             rspi = rspl_p->begin();
-#if 1
+    #if 1
             if (rspi == rspl_p->end())
                 return;
 
-            while ((*rspi)->RightX < rs_seed_lx)
+            while ((*rspi)->RightX() < rs_seed_lx)
             {
                 rspi++;
                 if (rspi == rspl_p->end())
@@ -349,8 +350,8 @@ class Labeling
                 }
             }
 
-            RastorSegment* rs;
-            while ((rs = *rspi)->LeftX <= rs_seed_lx)
+            RasterSegment* rs;
+            while ((rs = *rspi)->LeftX() <= rs_seed_lx)
             {
                 if (rs_seed_source_value == rs->SourceValue())
                 {
@@ -359,18 +360,18 @@ class Labeling
                 }
                 else
                 {
-                    rspi++
+                    rspi++;
                 }
 
                 if (rspi == rspl_p->end())
                     return;
             }
-#endif 
-#if 0 
-#endif
+    #endif 
+    #if 0 
+    #endif
         }
-
-        RegionInfo* ConnectRasterSegment(RastorSegment* rs_seed, const DstT region_num)
+        
+        RegionInfo* ConnectRasterSegment(RasterSegment* rs_seed, const DstT region_num)
         {
             RegionInfo* ri = new RegionInfo;
             int num_of_pixels = 0;
@@ -383,15 +384,15 @@ class Labeling
             min_y = max_y = rs_seed->Y();
             source_value = rs_seed->SourceValue();
 
-#if CALC_CENTER_OF_GRAVITY
-            int sum_x_ = 0;
-            int sum_y_ = 0;
-#endif 
+    #if CALC_CENTER_OF_GRAVITY
+            int sum_x = 0;
+            int sum_y = 0;
+    #endif 
             seed_queue_.push(rs_seed);
 
             while (seed_queue_.size() > 0)
             {
-                RastorSegment *rs = seed_queue_.front();
+                RasterSegment *rs = seed_queue_.front();
                 seed_queue_.pop();
                 ri->Push(rs);
 
@@ -416,10 +417,10 @@ class Labeling
 				    max_y = rs->Y();
 			    }
 
-#if CALC_CENTER_OF_GRAVITY
+    #if CALC_CENTER_OF_GRAVITY
                 sum_x += (rs->LeftX() + rs->RightX()) * n;
-                sum_y += rs->Y() * n
-#endif 
+                sum_y += rs->Y() * n;
+    #endif 
                 if (rs->Y() > 0)
                     SearchNeighboringSegment(rs, -1);
 
@@ -430,15 +431,15 @@ class Labeling
                 ri->SetMinMax(min_x, min_y, max_x, max_y);
                 ri->SetSourceValue(source_value);
                 ri->SetResult(region_num);
-#if CALC_CENTER_OF_GRAVITY
+    #if CALC_CENTER_OF_GRAVITY
                 float gx = static_cast<float>(sum_x) / (2 * num_of_pixels);
                 float gy = static_cast<float>(sum_y) / num_of_pixels;
                 ri->SetCenterOfGravity(gx, gy);
-#endif 
+    #endif 
                 return ri;
             }
         }
-
+        
         static bool RevCompRegionInfoPointer(const RegionInfo * const &l, 
                                              const RegionInfo * const &r)
         {
@@ -452,14 +453,12 @@ class Labeling
             }
             return b;
         }
-
+         
         void FillFrame(RegionInfo *ri, const DstT fill_value)
-        {
-#if 0
-#endif 
+        { 
+    #if 0
             while (ri->GetNumRasterSegments() > 0)
             {
-#if 0
                 RasterSegment* rs;
                 rs->Pop(rs);
                 DstT *sp = dst_frame_ + rs->LeftX() + rs->Y() * width;
@@ -468,41 +467,51 @@ class Labeling
                     *sp++ = fill_value;
                 }
             }
-#endif
+    #endif
             RSPList rspl = ri->GetRasterSegmentList();
             for (RSPIterator rspi = rspl.begin(); rspi != rspl.end(); rspi++)
             {
-                RastorSegment* rs = *rspi;
+                RasterSegment* rs = *rspi;
                 int lx = rs->LeftX();
                 int rx = rs->RightX();
                 int y = rs->Y();
-                DstT *sp = dst_frame_ + lx + y * width;
+                DstT *sp = dst_frame_ + lx + y * width_;
                 for (int i = 0; i < (rx - lx + 1); i++)
                 {
                     *sp++ = fill_value;
                 }
             }
         }
-
+        
+        
+    
     public:
-        inline int GetNumOfRegions(void) const 
+        inline int GetNumOfRegions(void) const
+        {
             return num_of_regions_;
+        }
 
-        inline int GetNumOfResultRegions(void) const 
+        inline int GetNumOfResultRegions(void) const
+        {
             return num_of_result_regions_;
-
-        inline RegionInfo* GetResultRegionInfo(const int num) const 
-            return result_region_info_[num]
+        }
+        
+        inline RegionInfo* GetResultRegionInfo(const int num) const
+        {
+            return result_region_info_[num];
+        }
 
         Labeling()
         {
             raster_segment_list_ = 0;
             region_info_list_.clear();
             result_region_info_.clear();
+         
         }
 
         virtual ~Labeling()
         {
+            
             for (RIPIterator ripi = region_info_list_.begin(); ripi != region_info_list_.end(); ripi++)
             {
                 RegionInfo *ri = *ripi;
@@ -510,9 +519,11 @@ class Labeling
             }
             region_info_list_.erase(region_info_list_.begin(), region_info_list_.end());
             region_info_list_.clear();
+            
         }
-#define CHECK_FOR_PHASE1 0
-#define CHECK_FOR_PHASE2 0
+    
+    #define CHECK_FOR_PHASE1 0
+    #define CHECK_FOR_PHASE2 0
         
         int Exec(SrcT *target, DstT *result,
                  int target_width, int target_height,
@@ -540,15 +551,15 @@ class Labeling
             // phase1 
             SrcT *p = src_frame_;
 
-#if (CLEAR_DST_BUFFER || CLEAR_ALL_DST_BUFFER)
+    #if (CLEAR_DST_BUFFER || CLEAR_ALL_DST_BUFFER)
             DstT *q = dst_frame_;
-#endif 
+    #endif 
             if (src_frame_ != reinterpret_cast<SrcT *>(dst_frame_))
             {
-#if CLEAR_ALL_DST_BUFFER
+    #if CLEAR_ALL_DST_BUFFER
                 for (int i = 0; i < width_ * height_; i++)
                     *q++ = 0;
-
+    #endif
                 for (int y = 0; y < height_; y++)
                 {
                     int lx = 0;
@@ -563,11 +574,11 @@ class Labeling
                             lx = x;
                         }
 
-#if (CLEAR_DST_BUFFER && !CLEAR_ALL_DST_BUFFER)
+    #if (CLEAR_DST_BUFFER && !CLEAR_ALL_DST_BUFFER)
                         if (*p = 0)
                             *q = 0;
                         q++;
-#endif
+    #endif
                         p++;
                     }
                         
@@ -598,7 +609,7 @@ class Labeling
                 }
             }
 
-#if CHECK_FOR_PHASE1
+    #if CHECK_FOR_PHASE1
             for (int y = 0; y < height_; y++)
             {
                 cout << y << ":" << raster_segment_list_[y].size() << endl;
@@ -612,7 +623,7 @@ class Labeling
                 }
             }
             cout << "num_of_raster_segments" << num_of_raster_segments_ << endl;
-#endif 
+    #endif 
 
             // phase pre2 
             region_info_list_.clear();
@@ -625,7 +636,7 @@ class Labeling
                 while (rspl_p->size() > 0)
                 {
                     RSPIterator rspi = rspl_p->begin();
-                    RasterSegment *rs = *ripi; // get 1 raster segment 
+                    RasterSegment *rs = *rspi; // get 1 raster segment 
                     rspl_p->erase(rspi);
 
                     RegionInfo *rip = ConnectRasterSegment(rs, num_of_regions_ + 1);
@@ -634,7 +645,7 @@ class Labeling
                     num_of_regions_++;
                 }
             }
-#if CHECK_FOR_PHASE2
+    #if CHECK_FOR_PHASE2
             for (int y = 0; y < height; y++) 
             {
 			    if (!raster_segment_list[y].empty()) 
@@ -657,7 +668,7 @@ class Labeling
 		    }
 		    cout << "num_of_pixels: " << n_p << endl;
 		    cout << "num_of_regions: " << num_of_regions << endl;
-#endif 
+    #endif 
             // phase 3 
             // recorder by size 
             result_region_info_.resize(num_of_regions_);
@@ -680,17 +691,17 @@ class Labeling
                     result_region_info_[n]->SetResult(n+1);
                     n++;
                 }
-                num_of_result_regions = n;
-			    for (int i = n; i < num_of_regions; i++) 
+                num_of_result_regions_ = n;
+			    for (int i = n; i < num_of_regions_; i++) 
                 {
-				    result_region_info[ i ]->SetResult( 0 );
+				    result_region_info_[i]->SetResult( 0 );
 			    }
 		    } 
             else 
             {
-			    for ( int i = 0; i < num_of_regions; i++ ) 
-                    result_region_info[ i ]->SetResult( i + 1 );
-			    num_of_result_regions = num_of_regions;
+			    for ( int i = 0; i < num_of_regions_; i++ ) 
+                    result_region_info_[i]->SetResult( i + 1 );
+			    num_of_result_regions_ = num_of_regions_;
             }
 
             // phase 4 
@@ -705,9 +716,10 @@ class Labeling
             delete [] raster_segment_list_;
             return 0;
         }
+    
 };
 typedef Labeling<unsigned char, short> LabelingBS;
-typedef Labeling<short, short> LabelingBS;
-typedef Labeling,unsigned char, short>::RegionInfo RegionInfoBS;
+typedef Labeling<short, short> LabelingSS;
+typedef Labeling<unsigned char, short>::RegionInfo RegionInfoBS;
 typedef Labeling<short,short>::RegionInfo RegionInfoSS;
 #endif // __OPS_WBC_WRAPPERS_LABELING_H__
