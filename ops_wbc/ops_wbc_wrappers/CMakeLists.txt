@@ -39,7 +39,7 @@ catkin_package(
 )
 
 add_library(ops_wbc_wrappers
-  #src/image_subscriber.cpp
+  src/image_subscriber.cpp
   src/utils.cpp
   src/rect.cpp
   src/hsv_mask.cpp
