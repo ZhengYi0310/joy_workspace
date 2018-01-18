@@ -64,7 +64,10 @@ add_library(ops_wbc_wrappers
   src/mouse.cpp
   src/simple_object.cpp
   src/object.cpp
+  src/line.cpp
+  src/coordinate.cpp
   src/material.cpp
+  src/grid.cpp
 )
 target_link_libraries(ops_wbc_wrappers GL glut GLU ${catkin_LIBRARIES})
 
