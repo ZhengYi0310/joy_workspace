@@ -15,27 +15,45 @@ message(STATUS "Compliter FLAG ${CMAKE_CXX_FLAGS}.")
 
 find_package(catkin REQUIRED
   COMPONENTS
+    cmake_modules
     cv_bridge
     image_transport
     message_filters
     roscpp
+    dynamic_reconfigure
+    std_msgs
     std_srvs
+    ops_wbc_utils
 )
+
+find_package(Eigen3)
+if(NOT EIGEN3_FOUND)
+  find_package(Eigen REQUIRED)
+  set(EIGEN3_INCLUDE_DIRS ${EIGEN_INCLUDE_DIRS})
+  set(EIGEN3_LIBRARIES ${EIGEN_LIBRARIES})
+else()
+  set(EIGEN3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
+endif()
 
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
 )
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ops_wbc_wrappers
   CATKIN_DEPENDS
+    cmake_modules
     cv_bridge
     image_transport
     message_filters
     roscpp
+    dynamic_reconfigure
+    std_msgs
     std_srvs
+    ops_wbc_utils
 )
 
 add_library(ops_wbc_wrappers
@@ -43,6 +61,9 @@ add_library(ops_wbc_wrappers
   src/utils.cpp
   src/rect.cpp
   src/hsv_mask.cpp
+  src/mouse.cpp
+  src/simple_object.cpp
+  src/material.cpp
 )
-target_link_libraries(ops_wbc_wrappers ${catkin_LIBRARIES})
+target_link_libraries(ops_wbc_wrappers GL glut GLU ${catkin_LIBRARIES})
 
