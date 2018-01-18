@@ -41,8 +41,8 @@ catkin_package(
 add_library(ops_wbc_wrappers
   #src/image_subscriber.cpp
   src/utils.cpp
-  #src/rect.cpp
-  #src/hsv_mask.cpp
+  src/rect.cpp
+  src/hsv_mask.cpp
 )
 target_link_libraries(ops_wbc_wrappers ${catkin_LIBRARIES})
 
