@@ -2604,12 +2604,31 @@ void GazeboRosApiPlugin::writeForcesTimerCB(const ros::TimerEvent& e)
     {
         std::string joint_name = torque_sensor_to_joint_[elem.first];
         double state = joint_[joint_name]->GetForce(0);
-
+        
+        // TODO : Make sure how to get joint torque properly.
+        // Apparently, sensed torque is 10 times greater than
+        // torque applied to the joint through "apply joint effort".
+        // In order to make sense, I added the following multiplication.
+        // Currently it seems to work well, but I guess it's not correct...
+        // Oct/6/2015 Daichi Yoshikawa
         state *= 0.10;
         elem.second->write(state);
     }
 
     gazebo::physics::JointWrench wrench;
+
+    for (auto elem : force_sensor_to_joint_)
+    {
+        std::string joint_name = elem.second;
+        wrench = joint_[joint_name]->GetForceTorque(0u);
+
+        external_force_x_[joint_name]->write(wrench.body2Force.x);
+        external_force_y_[joint_name]->write(wrench.body2Force.y);
+        external_force_z_[joint_name]->write(wrench.body2Force.z);
+        external_moment_x_[joint_name]->write(wrench.body2Torque.x);
+        external_moment_y_[joint_name]->write(wrench.body2Torque.y);
+        external_moment_z_[joint_name]->write(wrench.body2Torque.z);
+    }
 }
 
 // Register this plugin with the simulator
