@@ -63,6 +63,7 @@ add_library(ops_wbc_wrappers
   src/hsv_mask.cpp
   src/mouse.cpp
   src/simple_object.cpp
+  src/object.cpp
   src/material.cpp
 )
 target_link_libraries(ops_wbc_wrappers GL glut GLU ${catkin_LIBRARIES})
