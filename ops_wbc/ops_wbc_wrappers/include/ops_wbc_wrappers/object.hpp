@@ -9,6 +9,9 @@
 
 namespace ops_wbc_wrappers
 {
+    //class Object;
+    //typedef boost::shared_ptr<Object> ObjectPtr;
+
     class Object
     {
         public:
