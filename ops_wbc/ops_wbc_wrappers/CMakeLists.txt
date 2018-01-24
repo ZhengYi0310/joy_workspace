@@ -66,6 +66,7 @@ add_library(ops_wbc_wrappers
   src/object.cpp
   src/x_object.cpp
   src/x_deformable_object.cpp
+  src/x_hand.cpp
   src/line.cpp
   src/coordinate.cpp
   src/material.cpp
