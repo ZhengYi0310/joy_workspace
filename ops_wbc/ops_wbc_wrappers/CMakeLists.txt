@@ -72,6 +72,9 @@ add_library(ops_wbc_wrappers
   src/coordinate.cpp
   src/material.cpp
   src/camera.cpp
+  src/display.cpp
+  src/light.cpp
+  src/param.cpp
   src/grid.cpp
   src/pipe.cpp
 )
