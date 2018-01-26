@@ -17,7 +17,7 @@ namespace ops_wbc_wrappers
             static CameraPtr CAMERA_;
             static LightPtr LIGHT_;
             static DisplayPtr DISPLAY_;
-            static MoustPtr MOUSE_;
+            static MousePtr MOUSE_;
 
             Render(int& argc, char** argv);
             void start(void (*display)());

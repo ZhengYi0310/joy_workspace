@@ -75,6 +75,7 @@ add_library(ops_wbc_wrappers
   src/display.cpp
   src/light.cpp
   src/param.cpp
+  src/render.cpp
   src/grid.cpp
   src/pipe.cpp
 )
