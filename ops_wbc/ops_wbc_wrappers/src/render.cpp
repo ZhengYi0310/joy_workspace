@@ -142,6 +142,51 @@ namespace ops_wbc_wrappers
         }
     }
 
+    void keyboard(unsigned char key, int x, int y)
+    {
+        try
+        {
+            boost::mutex::scoped_lock(Render::PARAM_->mutex);
+            const char ESC_KEY = 27;
+
+            switch(key)
+            {
+                case ESC_KEY:
+                    exit(0);
+                    break;
+                case 'i':
+                    Render::CAMERA_->reset();
+                    break;
+                default:
+                    break;
+            };
+        }
+        catch(ops_wbc_wrappers::Exception& e)
+        {
+            std::cerr << e.what() << std::endl;
+        }
+        catch(ops_wbc_wrappers::FatalException& e)
+        {
+            std::cerr << e.what() << std::endl;
+            exit(1);
+        }
+        catch(std::bad_alloc& e)
+        {
+            std::cerr << e.what() << std::endl;
+            exit(1);
+        }
+        catch(std::exception& e)
+        {
+            std::cerr << e.what() << std::endl;
+            exit(1);
+        }
+        catch(...)
+        {
+            std::cerr << "ops_wbc_wrappers::keyboard : Unknown exception was thrown." << std::endl;
+            exit(1);
+        }
+    }
+
     void specialKey(int key, int x, int y)
     {
         try

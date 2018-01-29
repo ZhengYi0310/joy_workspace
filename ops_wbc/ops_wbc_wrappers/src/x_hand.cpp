@@ -524,3 +524,8 @@ void LeftHand::displayWithoutShade()
     this->getLeftHand().displayWithoutShade();
 }
 
+XDeformableObject& LeftHand::getLeftHand()
+{
+  static DeformableHandCore core(file_name_);
+  return core.getHand();
+}

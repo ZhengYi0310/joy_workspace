@@ -67,6 +67,8 @@ add_library(ops_wbc_wrappers
   src/x_object.cpp
   src/x_deformable_object.cpp
   src/x_hand.cpp
+  src/x_left_hand.cpp
+  src/x_right_hand.cpp
   src/quaternion.cpp
   src/line.cpp
   src/coordinate.cpp
@@ -80,4 +82,16 @@ add_library(ops_wbc_wrappers
   src/pipe.cpp
 )
 target_link_libraries(ops_wbc_wrappers GL glut GLU ${catkin_LIBRARIES})
+
+add_executable(cv_wrapper_test test/cv_wrapper_test.cpp)
+target_link_libraries(cv_wrapper_test 
+  ${catkin_LIBRARIES}
+  ops_wbc_wrappers
+)
+
+add_executable(gl_wrapper_test test/gl_wrapper_test.cpp)
+target_link_libraries(gl_wrapper_test 
+  ${catkin_LIBRARIES}
+  ops_wbc_wrappers
+)
 

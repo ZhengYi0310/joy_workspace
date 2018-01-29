@@ -4,7 +4,7 @@
 #include <GL/gl.h>
 #include <GL/glut.h>
 #include <GL/freeglut.h>
-//#include <ops_wbc_wrappers/render.hpp>
+#include <ops_wbc_wrappers/render.hpp>
 #include <ops_wbc_wrappers/material.hpp>
 #include <ops_wbc_wrappers/exceptions.hpp>
 #include <ops_wbc_wrappers/x_object.hpp>
