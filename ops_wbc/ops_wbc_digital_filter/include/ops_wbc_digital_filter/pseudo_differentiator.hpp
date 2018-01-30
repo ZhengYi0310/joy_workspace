@@ -29,5 +29,6 @@ namespace ops_wbc_digital_filter
             double coeff1_;
             double coeff2_;
     };
+    using PseudoDifferentiatorPtr = std::shared_ptr<PseudoDifferentiator>;
 }
 #endif // __OPS_WBC_DIGITAL_FILTER_PSEUDO_DIFFERENTIATOR_HPP

@@ -17,9 +17,8 @@
   <run_depend>ops_wbc_digital_filter</run_depend>
   <run_depend>ops_wbc_kalman_filter</run_depend>
   <run_depend>ops_wbc_utils</run_depend>
-
-  
-
+  <run_depend>ops_wbc_wrappers</run_depend>
+  <run_depend>ops_wbc_gazebo_interface</run_depend>
 
   <export>
     <metapackage/>

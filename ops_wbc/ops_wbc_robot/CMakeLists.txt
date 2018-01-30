@@ -42,17 +42,21 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ops_wbc_robot
   CATKIN_DEPENDS
+    ops_wbc_digital_filter
+    ops_wbc_utils
     cmake_modules
     roscpp
     tf2
     tf2_ros
-  DEPENDS 
+  DEPENDS yaml-cpp
 )
 
 add_library(ops_wbc_robot
   src/robot/transformation.cpp
+  src/robot/math.cpp	
 )
 target_link_libraries(ops_wbc_robot
   ${catkin_LIBRARIES}
+  yaml-cpp
   ${EIGEN3_LIBRARIES}
 )
