@@ -57,5 +57,6 @@ add_library(ops_wbc_robot
 )
 target_link_libraries(ops_wbc_robot
   ${catkin_LIBRARIES}
+  yaml-cpp
   ${EIGEN3_LIBRARIES}
 )

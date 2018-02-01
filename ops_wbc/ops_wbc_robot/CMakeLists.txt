@@ -17,6 +17,8 @@ endif()
 #set(CMAKE_CXX_FLAGS "-std=c++11")
 find_package(catkin REQUIRED
   COMPONENTS
+    ops_wbc_digital_filter
+    ops_wbc_utils
     cmake_modules
     roscpp
     tf2
