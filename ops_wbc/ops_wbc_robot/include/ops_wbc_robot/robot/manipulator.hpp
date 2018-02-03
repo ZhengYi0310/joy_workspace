@@ -11,15 +11,15 @@
 
 namespace ops_wbc_robot
 {
-    using VectorLinkPtr = std::vector<LinkPtr, Eigen::alligned_allocator<LinkPtr>>;
-    using VectorMatrix4d = std::vector<Eigen::Matrix4d, Eigen::alligned_allocator<Eigen::Matrix4d>>;
+    using VectorLinkPtr = std::vector<LinkPtr, Eigen::aligned_allocator<LinkPtr>>;
+    using VectorMatrix4d = std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>>;
     using VectorMatrix3d = std::vector<Eigen::Matrix3d>;
     using VectorMatrixXd = std::vector<Eigen::MatrixXd>;
     using VectorVector3d = std::vector<Eigen::Vector3d>;
     using MapMatrixXd = std::map<std::string,
                                  Eigen::MatrixXd,
                                  std::less<std::string>,
-                                 Eigen::alligned_allocator<std::pair<const std::string, Eigen::MatrixXd>>>;
+                                 Eigen::aligned_allocator<std::pair<const std::string, Eigen::MatrixXd>>>;
 
     class Manipulator
     {
@@ -50,7 +50,7 @@ namespace ops_wbc_robot
             inline const LinkPtr& getLink(uint32_t idx) const {return link_[idx];}
             inline const uint32_t getIndex(const std::string& name) {return name_to_idx_[name];}
             inline const uint32_t getDOF() const {return dof_;}
-            inline const uint32_t getMarcoManipulatorDOF() const {return marco_dof_;}
+            inline const uint32_t getMarcoManipulatorDOF() const {return macro_dof_;}
             const Eigen::VectorXd& q() const {return q_;}
             const Eigen::VectorXd& dq() const {return dq_;}
             const Eigen::Matrix4d& getTransform(int32_t idx) const {return T_[idx];}

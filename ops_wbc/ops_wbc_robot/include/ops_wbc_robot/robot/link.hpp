@@ -42,7 +42,7 @@ namespace ops_wbc_robot
             std::string child = "";
             bool ep = false;
 
-            TransformationPtr = nullptr;
+            TransformationPtr tf = nullptr;
 
             Eigen::Matrix4d T_org;
             Eigen::Vector3d C;
