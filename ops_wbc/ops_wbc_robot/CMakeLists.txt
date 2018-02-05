@@ -56,6 +56,7 @@ catkin_package(
 add_library(ops_wbc_robot
   src/robot/transformation.cpp
   src/robot/manipulator.cpp
+  src/robot/robot.cpp
   src/robot/math.cpp	
 )
 target_link_libraries(ops_wbc_robot

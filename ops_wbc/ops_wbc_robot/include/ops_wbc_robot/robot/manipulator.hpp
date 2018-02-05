@@ -5,7 +5,7 @@
 #include <vector>
 #include <memory>
 #include <Eigen/StdVector>
-#include <ops_wbc_digital_filter/differentiator.hpp>
+#include <ops_wbc_digital_filter/pseudo_differentiator.hpp>
 #include "ops_wbc_robot/definition.hpp"
 #include <ops_wbc_robot/robot/link.hpp>
 
