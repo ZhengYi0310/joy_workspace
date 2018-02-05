@@ -57,6 +57,8 @@ add_library(ops_wbc_robot
   src/robot/transformation.cpp
   src/robot/manipulator.cpp
   src/robot/robot.cpp
+  src/robot/tf_publisher.cpp
+  src/robot/parser.cpp
   src/robot/math.cpp	
 )
 target_link_libraries(ops_wbc_robot
