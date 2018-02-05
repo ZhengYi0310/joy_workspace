@@ -56,7 +56,7 @@ namespace ops_wbc_robot
             inline const Eigen::MatrixXd& getMassMatrixInv() const { return M_inv_; }
             const Eigen::MatrixXd& getMassMatrixInv(const std::string& mnp_name);
             inline const uint32_t getDOF() const { return dof_; }
-            inline const uint32_t getDOF(const std::string& mnp_name);
+            const uint32_t getDOF(const std::string& mnp_name);
             inline const uint32_t getMacroManipulatorDOF() const { return macro_dof_; }
 
         private:

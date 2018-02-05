@@ -66,3 +66,8 @@ target_link_libraries(ops_wbc_robot
   yaml-cpp
   ${EIGEN3_LIBRARIES}
 )
+
+add_executable(parser_test test/test.cpp)
+add_dependencies(parser_test ops_wbc_robot_gencpp)
+target_link_libraries(parser_test ops_wbc_robot)
+

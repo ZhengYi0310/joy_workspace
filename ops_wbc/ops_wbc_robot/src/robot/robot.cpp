@@ -66,6 +66,19 @@ void Robot::computeMassMatrix()
     }
 }
 
+void Robot::computeMassMatrix(const std::string& mnp_name)
+{
+    if(mnp_.find(mnp_name) == mnp_.end())
+    {
+        std::stringstream msg;
+        msg << "Could not find manipulator : " << mnp_name;
+        throw ops_wbc_utils::Exception("Robot::computeMassMatrix", msg.str());
+    }
+
+    mnp_[mnp_name]->computeMassMatrix();
+}
+
+
 void Robot::update(const Eigen::VectorXd& q)
 {
     if(q.rows() != dof_)
