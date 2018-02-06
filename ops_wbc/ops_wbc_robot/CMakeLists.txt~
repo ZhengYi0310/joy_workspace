@@ -71,3 +71,23 @@ add_executable(parser_test test/test.cpp)
 add_dependencies(parser_test ops_wbc_robot_gencpp)
 target_link_libraries(parser_test ops_wbc_robot)
 
+add_executable(parser_test2 test/test2.cpp)
+add_dependencies(parser_test2 ops_wbc_robot_gencpp)
+target_link_libraries(parser_test2 ops_wbc_robot)
+
+add_executable(parser_test3 test/test3.cpp)
+add_dependencies(parser_test3 ops_wbc_robot_gencpp)
+target_link_libraries(parser_test3 ops_wbc_robot)
+
+add_executable(parser_test4 test/test4.cpp)
+add_dependencies(parser_test4 ops_wbc_robot_gencpp)
+target_link_libraries(parser_test4 ops_wbc_robot)
+
+add_executable(parser_test5 test/test5.cpp)
+add_dependencies(parser_test5 ops_wbc_robot_gencpp)
+target_link_libraries(parser_test5 ops_wbc_robot)
+
+add_executable(parser_test5 test/test6.cpp)
+add_dependencies(parser_test5 ops_wbc_robot_gencpp)
+target_link_libraries(parser_test5 ops_wbc_robot)
+

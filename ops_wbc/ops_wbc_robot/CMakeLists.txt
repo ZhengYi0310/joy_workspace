@@ -83,3 +83,11 @@ add_executable(parser_test4 test/test4.cpp)
 add_dependencies(parser_test4 ops_wbc_robot_gencpp)
 target_link_libraries(parser_test4 ops_wbc_robot)
 
+add_executable(parser_test5 test/test5.cpp)
+add_dependencies(parser_test5 ops_wbc_robot_gencpp)
+target_link_libraries(parser_test5 ops_wbc_robot)
+
+add_executable(parser_test6 test/test6.cpp)
+add_dependencies(parser_test6 ops_wbc_robot_gencpp)
+target_link_libraries(parser_test6 ops_wbc_robot)
+
