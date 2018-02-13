@@ -56,6 +56,8 @@ catkin_package(
 
 add_library(ops_wbc_robot_controller
   src/param.cpp
+  src/effective_mass_matrix3d.cpp
+  src/gravity_compensation.cpp
 )
 add_dependencies(ops_wbc_robot_controller ops_wbc_robot_controller_gencfg)
 target_link_libraries(ops_wbc_robot_controller ${catkin_LIBRARIES})

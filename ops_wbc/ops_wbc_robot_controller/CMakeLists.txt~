@@ -57,5 +57,5 @@ catkin_package(
 add_library(ops_wbc_robot_controller
   src/param.cpp
 )
-add_dependencies(ahl_robot_controller ahl_robot_controller_gencfg)
-target_link_libraries(ahl_robot_controller ${catkin_LIBRARIES})
+add_dependencies(ops_wbc_robot_controller ops_wbc_robot_controller_gencfg)
+target_link_libraries(ops_wbc_robot_controller ${catkin_LIBRARIES})
