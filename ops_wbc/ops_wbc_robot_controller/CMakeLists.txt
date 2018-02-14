@@ -60,6 +60,9 @@ add_library(ops_wbc_robot_controller
   src/gravity_compensation.cpp
   src/friction_compensation.cpp
   src/damping.cpp
+  src/joint_control.cpp
+  src/position_control.cpp
+  src/orientation_control.cpp
 )
 add_dependencies(ops_wbc_robot_controller ops_wbc_robot_controller_gencfg)
 target_link_libraries(ops_wbc_robot_controller ${catkin_LIBRARIES})

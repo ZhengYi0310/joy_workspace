@@ -28,6 +28,7 @@ namespace ops_wbc_robot_controller
             virtual const std::string& getName() const {return task::UNDEFINED;}
             virtual void setParam(const ParamBasePtr& param) {param_ = param;}
             virtual void setGoal(const Eigen::MatrixXd& dst) {}
+            virtual void setGoal(const Eigen::MatrixXd& dst1, const Eigen::MatrixXd& dst2) {}
             virtual void setGoal(const Eigen::MatrixXd& dst1, const Eigen::MatrixXd& dst2, const Eigen::MatrixXd& dst3){}
             virtual void updateModel() {}
             virtual void computeGeneralizedForce(Eigen::VectorXd& tau) {}
