@@ -25,7 +25,7 @@ namespace wam_dmp_controller
         assert(hw);
         // Get joint name from a prameter server 
         std::string joint_name;
-        if (!n.getParam("joint", joint_name));
+        if (!n.getParam("joint", joint_name))
         {
             ROS_ERROR("No joint given (namespace: %s)", n.getNamespace().c_str());
             initialized_ = false;
@@ -35,7 +35,7 @@ namespace wam_dmp_controller
         // Load PID Controller using gains set on parameter server 
         if (!pid_controller_.init(ros::NodeHandle(n, "pid")))
         {
-            ROS_ERROR("Could not initialize a pid controller.");
+            ROS_ERROR("Could not initialize a pid controller for joint %s.", n.getNamespace().c_str());
             initialized_ = false;
             return initialized_;
         }
@@ -51,7 +51,8 @@ namespace wam_dmp_controller
 
         // Get URDF info about the joint 
         std::string urdf_str;
-        ROS_VERIFY(usc_utilities::read(n, "robot_description", urdf_str));
+		ros::NodeHandle temp_nh("barrett"); //TODO be careful of the namespace here
+        ROS_VERIFY(usc_utilities::read(temp_nh, "robot_description_yi", urdf_str));
         urdf::Model urdf;
         //if (!urdf.initParamWithinNodeHandle("robot_description", n))
         if (!urdf.initString(urdf_str))
@@ -79,7 +80,7 @@ namespace wam_dmp_controller
                                       const double &i_min,
                                       const bool &antiwindup)
     {
-        pid_controller_.setGains(p, i, d, i_max, i_min, antiwindup);
+        pid_controller_.setGains(p, i, d, i_max, i_min);//, antiwindup);
     }
 
     void JointPositionController::getGains(double &p,
@@ -240,4 +241,6 @@ namespace wam_dmp_controller
         }
     }
 }
+
+PLUGINLIB_EXPORT_CLASS(wam_dmp_controller::JointPositionController, controller_interface::ControllerBase)
 

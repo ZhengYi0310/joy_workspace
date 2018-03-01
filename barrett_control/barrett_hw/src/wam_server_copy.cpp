@@ -347,8 +347,13 @@ namespace barrett_hw
             hand_device->interface->initialize();
             hand_device->interface->update();
 
-            //ROS_INFO("Closing the BarrenttHand Grasp");
+            ROS_INFO("Closing the BarrenttHand Grasp");
+            usleep(500000);
             hand_device->interface->close(barrett::Hand::GRASP, false);
+            //usleep(500000);
+            //hand_device->interface->close(barrett::Hand::F1, false);
+            //usleep(500000);
+            //hand_device->interface->close(barrett::Hand::F3, false);
 
             wam_device->hand_device = hand_device;
         }
@@ -451,10 +456,10 @@ namespace barrett_hw
         // Get raw state 
         //Eigen::Matrix<double, DOF, 1> 
         const jp_type raw_positions = (device->Wam->getLowLevelWam()).getJointPositions();
-        //const jt_type raw_torques;
+        jt_type raw_torques;
         //Eigen::Matrix<double, DOF, 1> 
         jv_type raw_velocities;
-        /*
+        
         {
             BARRETT_SCOPED_LOCK(device->Wam->getEmMutex());
             {
@@ -464,7 +469,7 @@ namespace barrett_hw
                 }
             }
         }
-        */
+        
         {
             BARRETT_SCOPED_LOCK(device->Wam->getEmMutex());
             {
@@ -486,6 +491,7 @@ namespace barrett_hw
         {
             device->joint_velocities(i) = filters::exponentialSmoothing(raw_velocities(i), device->joint_velocities(i), 0.8);
             device->kdl_current_joint_velocities_.qdot(i) = device->joint_velocities(i);
+            device->joint_effort_cmds(i) = raw_torques(i);
         }
         
         // Store position 
@@ -533,13 +539,13 @@ namespace barrett_hw
                 ROS_WARN_STREAM("Commanded torque (" << device->joint_effort_cmds(i) << ") of joint (" << i << ") exceeds safety limits! They have been truncated to: +/- " << device->effort_limits(i));
             
             // Truncate this joint torque 
-            device->joint_effort_cmds(i) = std::max(std::min(device->joint_effort_cmds(i), device->effort_limits(i)), -1.0*device->effort_limits(i));
+            //device->joint_effort_cmds(i) = std::max(std::min(device->joint_effort_cmds(i), device->effort_limits(i)), -1.0*device->effort_limits(i));
             }
         }
 
         // Set the value of the ExposedOutput and reconnect them 
-        device->ExposedOutput->setValue(device->joint_effort_cmds);
-        barrett::systems::connect(device->ExposedOutput->output, device->jtSum->getInput(JT_INPUT)); 
+        //device->ExposedOutput->setValue(device->joint_effort_cmds);
+        //barrett::systems::connect(device->ExposedOutput->output, device->jtSum->getInput(JT_INPUT)); 
 
         /*****************************
         // Don't use setTorques in another realtime thread ever!!!!!!!!!!!

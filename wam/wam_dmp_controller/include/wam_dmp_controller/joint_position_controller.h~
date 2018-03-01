@@ -43,7 +43,7 @@
 #include <hardware_interface/joint_command_interface.h>
 
 #include <std_msgs/Float64.h>
-#include <control_msgs/JointControllerState.h>
+#include <wam_dmp_controller/JointControllerState.h>
 
 #include <usc_utilities/assert.h>
 #include <usc_utilities/param_server.h>
@@ -205,8 +205,9 @@ namespace wam_dmp_controller
     {
         if (joint_urdf_->type == urdf::Joint::CONTINUOUS)
         {
-            return joint_.getPosition();
+            return angles::normalize_angle(joint_.getPosition());
         }
+        return joint_.getPosition();
     }
 
     inline double JointPositionController::getJointVelocity() const 

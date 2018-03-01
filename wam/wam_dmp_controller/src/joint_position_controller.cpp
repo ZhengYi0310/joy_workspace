@@ -25,7 +25,7 @@ namespace wam_dmp_controller
         assert(hw);
         // Get joint name from a prameter server 
         std::string joint_name;
-        if (!n.getParam("joint", joint_name));
+        if (!n.getParam("joint", joint_name))
         {
             ROS_ERROR("No joint given (namespace: %s)", n.getNamespace().c_str());
             initialized_ = false;
@@ -35,13 +35,13 @@ namespace wam_dmp_controller
         // Load PID Controller using gains set on parameter server 
         if (!pid_controller_.init(ros::NodeHandle(n, "pid")))
         {
-            ROS_ERROR("Could not initialize a pid controller.");
+            ROS_ERROR("Could not initialize a pid controller for joint %s.", n.getNamespace().c_str());
             initialized_ = false;
             return initialized_;
         }
 
         // Start the realtime publisher 
-        controller_state_publisher_.reset(new realtime_tools::RealtimePublisher<control_msgs::JointControllerState>(n, "controller_state", 1));
+        controller_state_publisher_.reset(new realtime_tools::RealtimePublisher<wam_dmp_controller::JointControllerState>(n, "controller_state", 1));
 
         // Start command subscriber 
         sub_command_ = n.subscribe<std_msgs::Float64>("command", 1, &JointPositionController::setCommandCB, this);
@@ -51,7 +51,8 @@ namespace wam_dmp_controller
 
         // Get URDF info about the joint 
         std::string urdf_str;
-        ROS_VERIFY(usc_utilities::read(n, "robot_description", urdf_str));
+		ros::NodeHandle temp_nh("barrett"); //TODO be careful of the namespace here
+        ROS_VERIFY(usc_utilities::read(temp_nh, "robot_description_yi", urdf_str));
         urdf::Model urdf;
         //if (!urdf.initParamWithinNodeHandle("robot_description", n))
         if (!urdf.initString(urdf_str))
@@ -72,31 +73,31 @@ namespace wam_dmp_controller
         return initialized_;
     }
 
-    void JointPositionController::setGains(const double& p,
-                                           const double& i,
-                                           const double& d,
-                                           const double& i_max,
-                                           const double& i_min,
-                                           const bool& antiwindup)
+    void JointPositionController::setGains(const double &p,
+                                      const double &i,
+                                      const double &d,
+                                      const double &i_max,
+                                      const double &i_min,
+                                      const bool &antiwindup)
     {
-        pid_controller_.setGains(p, i, d, i_max, i_min);
+        pid_controller_.setGains(p, i, d, i_max, i_min);//, antiwindup);
     }
 
-    void JointPositionController::getGains(double& p,
-                                           double& i,
-                                           double& d,
-                                           double& i_max,
-                                           double& i_min,
-                                           bool& antiwindup)
+    void JointPositionController::getGains(double &p,
+                                           double &i,
+                                           double &d,
+                                           double &i_max,
+                                           double &i_min,
+                                           bool &antiwindup)
     {
         pid_controller_.getGains(p, i, d, i_max, i_min);
     }
 
-    void JointPositionController::getGains(double& p,
-                                           double& i, 
-                                           double& d,
-                                           double& i_max,
-                                           double& i_min)
+    void JointPositionController::getGains(double &p,
+                                           double &i, 
+                                           double &d,
+                                           double &i_max,
+                                           double &i_min)
     {
         bool dummy;
         pid_controller_.getGains(p, i, d, i_max, i_min);
@@ -212,7 +213,7 @@ namespace wam_dmp_controller
                          controller_state_publisher_->msg_.i_clamp,
                          dummy,
                          antiwindup);
-                //controller_state_publisher_->msg_.antiwindup = static_cast<char>(antiwindup);
+                controller_state_publisher_->msg_.antiwindup = static_cast<char>(antiwindup);
                 controller_state_publisher_->unlockAndPublish();
             }
         }
@@ -240,4 +241,6 @@ namespace wam_dmp_controller
         }
     }
 }
+
+PLUGINLIB_EXPORT_CLASS(wam_dmp_controller::JointPositionController, controller_interface::ControllerBase)
 

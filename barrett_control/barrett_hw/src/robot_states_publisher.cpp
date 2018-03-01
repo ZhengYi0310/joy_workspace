@@ -33,7 +33,8 @@ namespace robot_states_publisher
             robot_state_handle_.push_back(hw->getHandle(robot_names[i]));
         }
 
-        realtime_pub_joint_states_.reset(new realtime_tools::RealtimePublisher<sensor_msgs::JointState>(root_nh, "joint_states", 10));
+        //realtime_pub_joint_states_.reset(new realtime_tools::RealtimePublisher<sensor_msgs::JointState>(root_nh, "joint_states_rt", 10));
+        realtime_pub_joint_states_.reset(new realtime_tools::RealtimePublisher<barrett_hw::joint_state>(root_nh, "joint_states_rt", 10));
         const std::vector<std::string>& joint_names = (hw->getHandle(robot_names[0])).getJointStateInterface().getNames();
         num_joints_ = joint_names.size();
         for (int i = 0; i < num_joints_; i++)
@@ -84,7 +85,8 @@ namespace robot_states_publisher
             
             if (realtime_pub_joint_states_->trylock())
             {
-                realtime_pub_joint_states_->msg_.header.stamp = duration;
+                realtime_pub_joint_states_->msg_.header_from_controller_start = duration;
+                realtime_pub_joint_states_->msg_.header.stamp = time;
                 //tf::poseKDLToMsg(arm_cartesian_state_handles_[0].getPose(),  realtime_pub_no_tactile_->msg_.Pose);
                 //tf::twistKDLToMsg(arm_cartesian_state_handles_[0].getTwist(), realtime_pub_no_tactile_->msg_.Twist);
                 for (int i = 0; i < num_joints_; i++)
@@ -98,7 +100,9 @@ namespace robot_states_publisher
 
             if (realtime_pub_cartesian_states_->trylock())
             {
-                realtime_pub_cartesian_states_->msg_.header.stamp = duration;
+                //realtime_pub_cartesian_states_->msg_.header.stamp = duration;
+                realtime_pub_cartesian_states_->msg_.header.stamp = time;
+                realtime_pub_cartesian_states_->msg_.header_from_controller_start = duration;
                 realtime_pub_cartesian_states_->msg_.base_frame = arm_cartesian_state_handles_[0].getBaseFrame();
                 tf::poseKDLToMsg(arm_cartesian_state_handles_[0].getPose(),  realtime_pub_cartesian_states_->msg_.Pose);
                 tf::twistKDLToMsg(arm_cartesian_state_handles_[0].getTwist(), realtime_pub_cartesian_states_->msg_.Twist);
@@ -110,7 +114,9 @@ namespace robot_states_publisher
                 if (realtime_pub_biotac_hand_->trylock())
                 {
                     realtime_pub_biotac_hand_->msg_ = biotac_hand_->collectBatch();
-                    realtime_pub_biotac_hand_->msg_.header.stamp = ros::Time((realtime_pub_biotac_hand_->msg_.header.stamp - controller_start_time_).toSec());
+                    realtime_pub_biotac_hand_->msg_.frame_collection_from_header = ros::Time((time - realtime_pub_biotac_hand_->msg_.bt_time.frame_start_time).toSec()); // frame collection starts earlier than the header of this loop
+                    realtime_pub_biotac_hand_->msg_.header_from_controller_start = ros::Time((time - controller_start_time_).toSec());
+                    realtime_pub_biotac_hand_->msg_.header.stamp = time;
                     realtime_pub_biotac_hand_->msg_.bt_time.frame_start_time = ros::Time((realtime_pub_biotac_hand_->msg_.bt_time.frame_start_time - controller_start_time_).toSec());
                     realtime_pub_biotac_hand_->msg_.bt_time.frame_end_time = ros::Time((realtime_pub_biotac_hand_->msg_.bt_time.frame_end_time - controller_start_time_).toSec());                                   
                     realtime_pub_biotac_hand_->unlockAndPublish();

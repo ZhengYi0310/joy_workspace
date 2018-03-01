@@ -178,7 +178,7 @@ namespace wam_dmp_controller
             Eigen::MatrixXd eigen_identity_;
 
             Eigen::VectorXd eigen_nullspace_term_;
-            Eigen::VectorXd eigen_nullspace_projector_;
+            Eigen::MatrixXd eigen_nullspace_projector_;
             Eigen::VectorXd eigen_nullspace_error_;
 
             /*!

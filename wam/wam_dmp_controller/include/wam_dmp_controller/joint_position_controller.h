@@ -43,14 +43,14 @@
 #include <hardware_interface/joint_command_interface.h>
 
 #include <std_msgs/Float64.h>
-#include <control_msgs/JointControllerState.h>
+#include <wam_dmp_controller/JointControllerState.h>
 
 #include <usc_utilities/assert.h>
 #include <usc_utilities/param_server.h>
 
 namespace wam_dmp_controller
 {
-    class JointPositionController //: public controller_interface::Controller<hardware_interface::EffortJointInterface>
+    class JointPositionController : public controller_interface::Controller<hardware_interface::EffortJointInterface>
     {
         public:
             
@@ -125,17 +125,17 @@ namespace wam_dmp_controller
             /**
              * \brief Get the PID parameters 
              */
-            void getGains(double& p, double& i, double& d, double& i_max, double& i_min);
+            void getGains(double &p, double &i, double &d, double &i_max, double &i_min);
 
             /**
              * \brief Get the PID parameters 
              */
-            void getGains(double& p, double& i, double& d, double& i_max, double& i_min, bool& antiwindup);
+            void getGains(double &p, double &i, double &d, double &i_max, double &i_min, bool &antiwindup);
 
             /**
              * \brief Set the PID parameters 
              */
-            void setGains(const double& p, const double& i, const double& d, const double& i_max, const double& i_min, const bool& antiwindup = false);
+            void setGains(const double &p, const double &i, const double &d, const double &i_max, const double &i_min, const bool &antiwindup = false);
 
             /**
              * \brief Print debug info to the console 
@@ -176,7 +176,7 @@ namespace wam_dmp_controller
 
             control_toolbox::Pid pid_controller_; /**<Internal PID controller. */
 
-            boost::scoped_ptr<realtime_tools::RealtimePublisher<control_msgs::JointControllerState> > controller_state_publisher_;
+            boost::scoped_ptr<realtime_tools::RealtimePublisher<wam_dmp_controller::JointControllerState> > controller_state_publisher_;
 
             ros::Subscriber sub_command_;
 
@@ -205,8 +205,9 @@ namespace wam_dmp_controller
     {
         if (joint_urdf_->type == urdf::Joint::CONTINUOUS)
         {
-            return joint_.getPosition();
+            return angles::normalize_angle(joint_.getPosition());
         }
+        return joint_.getPosition();
     }
 
     inline double JointPositionController::getJointVelocity() const 

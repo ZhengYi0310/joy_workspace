@@ -17,6 +17,7 @@
 
 #include <barrett_hw/arm_cartesian_state.h>
 #include <barrett_model/robot_state_interface.h>
+#include <barrett_hw/joint_state.h>
 
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -42,7 +43,8 @@ namespace robot_states_publisher
         private:
             boost::shared_ptr<barrett_model::RobotStateInterface> robot_state_;
 
-            boost::shared_ptr<realtime_tools::RealtimePublisher<sensor_msgs::JointState> > realtime_pub_joint_states_;
+            //boost::shared_ptr<realtime_tools::RealtimePublisher<sensor_msgs::JointState> > realtime_pub_joint_states_;
+            boost::shared_ptr<realtime_tools::RealtimePublisher<barrett_hw::joint_state> > realtime_pub_joint_states_;
             boost::shared_ptr<realtime_tools::RealtimePublisher<barrett_hw::arm_cartesian_state> > realtime_pub_cartesian_states_;
             boost::shared_ptr<realtime_tools::RealtimePublisher<biotac_sensors::BioTacHand> > realtime_pub_biotac_hand_;
 

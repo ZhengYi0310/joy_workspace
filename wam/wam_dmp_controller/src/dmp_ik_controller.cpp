@@ -36,19 +36,22 @@ namespace wam_dmp_controller
 
     bool DMPIKController::getArmRelatedVariables(const std::string& handle_namespace, std::string& controller_handle_namespace)
     {
+ 		/*
         if (handle_namespace.compare(0, 6, std::string("/l_arm")) == 0)
         {
-            controller_handle_namespace.assign("/l_arm_dmp_ik_controller");
+            controller_handle_namespace.assign("barrett/l_arm_dmp_ik_controller");
         }
         else if (handle_namespace.compare(0, 6, std::string("/r_arm")) == 0)
         {
-            controller_handle_namespace.assign("/r_arm_dmp_ik_controller");
+            controller_handle_namespace.assign("barrett/r_arm_dmp_ik_controller");
         }
         else 
         {
             ROS_ERROR("Invalid controller handle namespace: >%s<!", handle_namespace.c_str());
             return false;
         }
+		*/
+        controller_handle_namespace.assign("barrett/wam_dmp_ik_controller");
         return true;
     }    
 
@@ -70,9 +73,9 @@ namespace wam_dmp_controller
 
         viz_marker_desired_arrow_publisher_.reset(new realtime_tools::RealtimePublisher<visualization_msgs::Marker>(node_handle_, "dmp_ik_controller_marker_desired_arrow", publisher_buffer_size_));
 
-        viz_marker_actual_line_publisher_.reset(new realtime_tools::RealtimePublisher<visualization_msgs::Marker>(node_handle_, "dmp_ik_controller_maerker_actual_line", publisher_buffer_size_));
+        viz_marker_actual_line_publisher_.reset(new realtime_tools::RealtimePublisher<visualization_msgs::Marker>(node_handle_, "dmp_ik_controller_marker_actual_line", publisher_buffer_size_));
 
-        viz_marker_desired_line_publisher_.reset(new realtime_tools::RealtimePublisher<visualization_msgs::Marker>(node_handle_, "dmp_ik_controller_desired_actual_line", publisher_buffer_size_));        
+        viz_marker_desired_line_publisher_.reset(new realtime_tools::RealtimePublisher<visualization_msgs::Marker>(node_handle_, "dmp_ik_controller_marker_desired_line", publisher_buffer_size_));        
 
         geometry_msgs::Point actual_point;
         actual_line_points_.reset(new CircularMessageBuffer<geometry_msgs::Point>(visualization_line_max_points_, actual_point));
@@ -102,8 +105,8 @@ namespace wam_dmp_controller
         ROS_VERIFY(robot_info::RobotInfo::getArmJointNames(robot_parts, joint_names));
 
         num_joints_ = (int)joint_names.size();
-        ROS_DEBUG("Initializing DMP IK Controller with >%i< joints.", num_joints_);
-        int num_dof = usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT + num_joints_; // for the WAM, 14
+        ROS_INFO("Initializing DMP IK Controller with >%i< joints.", num_joints_);
+        int num_dof = usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT + num_joints_; // for the whole WAM arm, 14
 
         desired_positions_ = Eigen::VectorXd::Zero(num_dof);
         desired_velocities_ = Eigen::VectorXd::Zero(num_dof);
@@ -133,13 +136,15 @@ namespace wam_dmp_controller
 
         // initiaze the cartesian controller 
         cart_controller_.reset(new CartController());
+        
         if (!cart_controller_->init(hw, node_handle_))
         {
             ROS_ERROR("Could not initialize Cartesian Controller.");
             return (initialized_ = false);
         }
-
-        ROS_DEBUG("Done initializing DMP IK controller.");
+        
+        
+        ROS_INFO("Done initializing DMP IK controller.");
         return (initialized_ = true);
     }
 
@@ -156,13 +161,14 @@ namespace wam_dmp_controller
         first_time_ = true;
         execution_error_ = false;
 
-        dmp_controller_->stop(); // this resets the dmp controller 
+        dmp_controller_->stop(); // this resets the dmp controller.
+        
         if (!holdPositions())
         {
             ROS_ERROR("Problem when holding position when starting DMP IK controller. (Real-time violation)");
             execution_error_ = true;
         }
-        cart_controller_->starting(time);
+        cart_controller_->starting(time);        
     }
 
     // REAL-TIME REQUIREMENTS
@@ -170,6 +176,73 @@ namespace wam_dmp_controller
     {
         cart_controller_->stopping(time);
     }
+
+    // REAL-TIME REQUIREMENTS
+    void DMPIKController::update(const ros::Time& time, const ros::Duration& period)
+    {
+        if (execution_error_)
+        {
+            ROS_ERROR("Execution Error!");
+            return;
+        }
+
+        if (dmp_controller_->newDMPReady())
+        {
+            dmp_lib::DMPBasePtr dmp;
+            if (!dmp_controller_->getDMP(dmp))
+            {
+                ROS_ERROR("Could not get the DMP. This should never happen (Real-time Violation).");
+                execution_error_ = true;
+                return;
+            }
+
+            if (!dmp->getGoal(goal_))
+            {
+                ROS_ERROR("Could not get the DMP goal point. This should never happen(Real-time Violation).");
+                execution_error_ = true;
+                return;
+            }
+
+            getDesiredPosition();
+            if(!adjustVariables(desired_positions_, start_))
+            {
+                ROS_ERROR("Could not rearange DMP variables (Real-time Violatio)!");
+                execution_error_ = true;
+                return;
+            }
+
+            if (!dmp->changeStart(start_))
+            {
+                ROS_ERROR("Could not get start of the DMP (Real-time Violation)!");
+                execution_error_ = true;
+                return;
+            }
+        }
+
+        // integrate DMP 
+        if (dmp_controller_->isRunning(desired_positions_, desired_velocities_, desired_accelerations_))
+        {
+            if (!setDesiredState()) // Set the corresponding variables in cart_controller 
+            {
+                ROS_ERROR("Could not set desired states (Real-time Violation)!");
+                execution_error_ = true;
+                return;
+            }
+        }
+
+        else 
+        {
+            if (!holdPositions())
+            {
+                ROS_ERROR("Failed to hold positions (Real-time Violation)!");
+                execution_error_ = true;
+                return;
+            }
+        }
+
+        //visualize();
+        cart_controller_->update(time, period);
+    }        
 
     // REAL-TIME REQUIREMENTS
     bool DMPIKController::setDesiredState()
@@ -388,6 +461,50 @@ namespace wam_dmp_controller
         {
             publishing_counter_ = 0;
 
+            if (pose_actual_publisher_ && pose_actual_publisher_->trylock())
+            {
+                pose_actual_publisher_->msg_.header.frame_id = root_name_;
+                pose_actual_publisher_->msg_.header.stamp = ros::Time::now();
+                pose_actual_publisher_->msg_.header.seq = 0;
+                pose_actual_publisher_->msg_.pose.position.x = cart_controller_->kdl_real_pose_measured_.p.x();
+                pose_actual_publisher_->msg_.pose.position.y = cart_controller_->kdl_real_pose_measured_.p.y();
+                pose_actual_publisher_->msg_.pose.position.z = cart_controller_->kdl_real_pose_measured_.p.z();
+                double qx, qy, qz, qw;
+                cart_controller_->kdl_real_pose_measured_.M.GetQuaternion(qx, qy, qz, qw);
+                pose_actual_publisher_->msg_.pose.orientation.x = qx;
+                pose_actual_publisher_->msg_.pose.orientation.y = qy;
+                pose_actual_publisher_->msg_.pose.orientation.z = qz;
+                pose_actual_publisher_->msg_.pose.orientation.w = qw;
+                pose_actual_publisher_->unlockAndPublish();
+            }
+            else 
+            {
+                ROS_ERROR("Skipping actual pose visualization (Real-time violation)!");
+            }
+
+            if (pose_desired_publisher_ && pose_desired_publisher_->trylock())
+            {
+                pose_desired_publisher_->msg_.header.frame_id = root_name_;
+                pose_desired_publisher_->msg_.header.stamp = ros::Time::now();
+                pose_desired_publisher_->msg_.header.seq = 0;
+                pose_desired_publisher_->msg_.pose.position.x = desired_positions_(usc_utilities::Constants::X);
+                pose_desired_publisher_->msg_.pose.position.y = desired_positions_(usc_utilities::Constants::Y);
+                pose_desired_publisher_->msg_.pose.position.z = desired_positions_(usc_utilities::Constants::Z);
+                pose_desired_publisher_->msg_.pose.orientation.w = desired_positions_(usc_utilities::Constants::N_CART + usc_utilities::Constants::QW);
+                pose_desired_publisher_->msg_.pose.orientation.x = desired_positions_(usc_utilities::Constants::N_CART + usc_utilities::Constants::QX);
+                pose_desired_publisher_->msg_.pose.orientation.y = desired_positions_(usc_utilities::Constants::N_CART + usc_utilities::Constants::QY);
+                pose_desired_publisher_->msg_.pose.orientation.z = desired_positions_(usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ);
+
+                pose_desired_publisher_->unlockAndPublish();
+            }
+            else 
+            {
+                ROS_ERROR("Skipping the desired pose visualization (Realtime-violation)!");
+            }
+            
+            
+
+            
             Eigen::Matrix<double, 3, 1> velocity_vec;
             Eigen::Matrix<double, 3, 1> world_vec;
             Eigen::Quaternion<double> eigen_quat;
@@ -407,7 +524,7 @@ namespace wam_dmp_controller
 
                 viz_marker_actual_arrow_publisher_->msg_.color.r = 0.0f;
                 viz_marker_actual_arrow_publisher_->msg_.color.g = 0.0f;
-                viz_marker_actual_arrow_publisher_->msg_.color.b = 0.0f;
+                viz_marker_actual_arrow_publisher_->msg_.color.b = 1.0f;
                 viz_marker_actual_arrow_publisher_->msg_.color.a = 0.5;
 
                 viz_marker_actual_arrow_publisher_->msg_.lifetime = ros::Duration(); // Will never be deleted ?
@@ -421,13 +538,15 @@ namespace wam_dmp_controller
                 viz_marker_actual_arrow_publisher_->msg_.pose.orientation.y = qy;
                 viz_marker_actual_arrow_publisher_->msg_.pose.orientation.z = qz;
                 viz_marker_actual_arrow_publisher_->msg_.pose.orientation.w = qw;
-
+                //viz_marker_actual_arrow_publisher_->unlockAndPublish(); 
+                
+                
                 for (int i = 0; i < usc_utilities::Constants::N_CART; i++)
                 {
                     velocity_vec(i) = cart_controller_->kdl_twist_measured_(i);
                     world_vec(i) = 0.0;
                 }
-                world_vec(0) = 1.0;
+                world_vec(usc_utilities::Constants::Z) = 1.0;
                 eigen_quat.setFromTwoVectors(world_vec, velocity_vec);
 
                 double length = velocity_vec.norm();
@@ -455,13 +574,17 @@ namespace wam_dmp_controller
                     ROS_ERROR("Invalid quaternion coordinate! Cannot set orientation for the marker message (Real-time violation)!");
                     return;
                 }
+                
             }
 
             else 
             {
                 ROS_ERROR("Skipping actual arrow visualization. (Real-time violation)!");
             }
-
+            
+            
+            
+            /*
             if (viz_marker_desired_arrow_publisher_ && viz_marker_desired_arrow_publisher_->trylock())
             {
                 viz_marker_desired_arrow_publisher_->msg_.header.frame_id = root_name_;
@@ -527,53 +650,13 @@ namespace wam_dmp_controller
             {
                 ROS_ERROR("Skipping desired arrow visualization (Real-time violation)!");
             }
-
-            if (pose_actual_publisher_ && pose_actual_publisher_->trylock())
-            {
-                pose_actual_publisher_->msg_.header.frame_id = root_name_;
-                pose_actual_publisher_->msg_.header.stamp = ros::Time::now();
-                pose_actual_publisher_->msg_.header.seq = 0;
-                pose_actual_publisher_->msg_.pose.position.x = cart_controller_->kdl_real_pose_measured_.p.x();
-                pose_actual_publisher_->msg_.pose.position.y = cart_controller_->kdl_real_pose_measured_.p.y();
-                pose_actual_publisher_->msg_.pose.position.z = cart_controller_->kdl_real_pose_measured_.p.z();
-                double qx, qy, qz, qw;
-                cart_controller_->kdl_real_pose_measured_.M.GetQuaternion(qx, qy, qz, qw);
-                pose_actual_publisher_->msg_.pose.orientation.x = qx;
-                pose_actual_publisher_->msg_.pose.orientation.y = qy;
-                pose_actual_publisher_->msg_.pose.orientation.z = qz;
-                pose_actual_publisher_->msg_.pose.orientation.w = qw;
-                pose_actual_publisher_->unlockAndPublish();
-            }
-            else 
-            {
-                ROS_ERROR("Skipping actual pose visualization (Real-time violation)!");
-            }
-
-            if (pose_desired_publisher_ && pose_desired_publisher_->trylock())
-            {
-                pose_desired_publisher_->msg_.header.frame_id = root_name_;
-                pose_desired_publisher_->msg_.header.stamp = ros::Time::now();
-                pose_desired_publisher_->msg_.header.seq = 0;
-                pose_desired_publisher_->msg_.pose.position.x = desired_positions_(usc_utilities::Constants::X);
-                pose_desired_publisher_->msg_.pose.position.y = desired_positions_(usc_utilities::Constants::Y);
-                pose_desired_publisher_->msg_.pose.position.z = desired_positions_(usc_utilities::Constants::Z);
-                pose_desired_publisher_->msg_.pose.orientation.w = desired_positions_(usc_utilities::Constants::N_CART + usc_utilities::Constants::QW);
-                pose_desired_publisher_->msg_.pose.orientation.x = desired_positions_(usc_utilities::Constants::N_CART + usc_utilities::Constants::QX);
-                pose_desired_publisher_->msg_.pose.orientation.y = desired_positions_(usc_utilities::Constants::N_CART + usc_utilities::Constants::QY);
-                pose_desired_publisher_->msg_.pose.orientation.z = desired_positions_(usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ);
-
-                pose_actual_publisher_->unlockAndPublish();
-            }
-            else 
-            {
-                ROS_ERROR("Skipping the desired pose visualization (Realtime-violation)!");
-            }
-
+            */ 
+            /* 
             visualization_line_counter_++;
             if (visualization_line_counter_ % visualization_line_rate_ == 0)
             {
                 visualization_line_counter_ = 0;
-                publishing_seq_counter_++;
+                //publishing_seq_counter_++;
 
                 if (viz_marker_actual_line_publisher_ && viz_marker_actual_line_publisher_->trylock())
                 {
@@ -583,9 +666,9 @@ namespace wam_dmp_controller
                     viz_marker_actual_line_publisher_->msg_.ns = "DMPActualLine";
                     viz_marker_actual_line_publisher_->msg_.type = visualization_msgs::Marker::LINE_STRIP;
                     viz_marker_actual_line_publisher_->msg_.id = 3;
-                    viz_marker_actual_line_publisher_->msg_.scale.x = 0.006;
-                    viz_marker_actual_line_publisher_->msg_.scale.y = 0.006;
-                    viz_marker_actual_line_publisher_->msg_.scale.z = 0.006;
+                    viz_marker_actual_line_publisher_->msg_.scale.x = 0.05;
+                    viz_marker_actual_line_publisher_->msg_.scale.y = 0.05;
+                    viz_marker_actual_line_publisher_->msg_.scale.z = 0.05;
                     viz_marker_actual_line_publisher_->msg_.lifetime = ros::Duration();
                     viz_marker_actual_line_publisher_->msg_.color.r = 0.0f;
                     viz_marker_actual_line_publisher_->msg_.color.g = 0.0f;
@@ -619,7 +702,7 @@ namespace wam_dmp_controller
                     ROS_ERROR("Skipping actual line visualization (Real-time violation)!");
                 }
 
-                publishing_seq_counter_++; 
+                //publishing_seq_counter_++; 
 
                 if (viz_marker_desired_line_publisher_ && viz_marker_desired_line_publisher_->trylock())
                 {
@@ -629,9 +712,9 @@ namespace wam_dmp_controller
                     viz_marker_desired_line_publisher_->msg_.ns = "DMPDesiredLine";
                     viz_marker_desired_line_publisher_->msg_.type = visualization_msgs::Marker::LINE_STRIP;
                     viz_marker_desired_line_publisher_->msg_.id = 4;
-                    viz_marker_desired_line_publisher_->msg_.scale.x = 0.006;
-                    viz_marker_desired_line_publisher_->msg_.scale.y = 0.006;
-                    viz_marker_desired_line_publisher_->msg_.scale.z = 0.006;
+                    viz_marker_desired_line_publisher_->msg_.scale.x = 0.05;
+                    viz_marker_desired_line_publisher_->msg_.scale.y = 0.05;
+                    viz_marker_desired_line_publisher_->msg_.scale.z = 0.05;
                     viz_marker_desired_line_publisher_->msg_.lifetime = ros::Duration();
                     viz_marker_desired_line_publisher_->msg_.color.r = 0.0f;
                     viz_marker_desired_line_publisher_->msg_.color.g = 1.0f;
@@ -666,77 +749,11 @@ namespace wam_dmp_controller
                 }
                 first_time_ = false;
             }
+            */
             /* viz_marker_desired_line_publisher_.msg_.points.resize(visualization_line_max_points_)
              */
         }
     }
-
-    // REAL-TIME REQUIREMENTS
-    void DMPIKController::update(const ros::Time& time, const ros::Duration& period)
-    {
-        if (execution_error_)
-        {
-            ROS_ERROR("Execution Error!");
-            return;
-        }
-
-        if (dmp_controller_->newDMPReady())
-        {
-            dmp_lib::DMPBasePtr dmp;
-            if (!dmp_controller_->getDMP(dmp))
-            {
-                ROS_ERROR("Could not get the DMP. This should never happen (Real-time Violation).");
-                execution_error_ = true;
-                return;
-            }
-
-            if (!dmp->getGoal(goal_))
-            {
-                ROS_ERROR("Could not get the DMP goal point. This should never happen(Real-time Violation).");
-                execution_error_ = true;
-                return;
-            }
-
-            getDesiredPosition();
-            if(!adjustVariables(desired_positions_, start_))
-            {
-                ROS_ERROR("Could not rearange DMP variables (Real-time Violatio)!");
-                execution_error_ = true;
-                return;
-            }
-
-            if (!dmp->changeStart(start_))
-            {
-                ROS_ERROR("Could not get start of the DMP (Real-time Violation)!");
-                execution_error_ = true;
-                return;
-            }
-        }
-
-        // integrate DMP 
-        if (dmp_controller_->isRunning(desired_positions_, desired_velocities_, desired_accelerations_))
-        {
-            if (!setDesiredState()) // Set the corresponding variables in cart_controller 
-            {
-                ROS_ERROR("Could not set desired states (Real-time Violation)!");
-                execution_error_ = true;
-                return;
-            }
-        }
-
-        else 
-        {
-            if (!holdPositions())
-            {
-                ROS_ERROR("Failed to hold positions (Real-time Violation)!");
-                execution_error_ = true;
-                return;
-            }
-        }
-
-        visualize();
-        cart_controller_->update(time, period);
-    }    
 }
 PLUGINLIB_EXPORT_CLASS(wam_dmp_controller::DMPIKController, controller_interface::ControllerBase)
 

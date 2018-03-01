@@ -43,9 +43,10 @@ namespace wam_dmp_controller
         ROS_VERIFY(usc_utilities::read(node_handle_, std::string("publisher_buffer_size"), publisher_buffer_size_));
         ROS_VERIFY(usc_utilities::read(node_handle_, std::string("publisher_rate"), publisher_rate_));
 
-        ros::NodeHandle cartesian_ff_gains_handle(std::string("/cartesian_pose_twist_gains"));
-        ROS_VERIFY(usc_utilities::read(cartesian_ff_gains_handle, std::string("ff_trans"), ff_trans_));
-        ROS_VERIFY(usc_utilities::read(cartesian_ff_gains_handle, std::string("ff_rot"), ff_rot_));
+        //ros::NodeHandle cartesian_ff_gains_handle(std::string("/cartesian_pose_twist_gains"));
+        ROS_VERIFY(usc_utilities::read(node_handle_, std::string("ff_trans"), ff_trans_));
+        ROS_VERIFY(usc_utilities::read(node_handle_, std::string("ff_rot"), ff_rot_));
+        return true;
     }
 
     bool CartesianTwistControllerWithNullspaceOptimization::initMechanismChain()
@@ -53,25 +54,22 @@ namespace wam_dmp_controller
         // get names of root and tip joint from the parameter server 
         std::string root_name, tip_name, urdf_str;
         
-        if (node_handle_.getParam("root_name", root_name))
+        if (!node_handle_.getParam("root_name", root_name))
         {
             ROS_ERROR("Could not retrieve parameter >>root<< from the parameter server in the namespace %s.", node_handle_.getNamespace().c_str());
             return false;
         }
 
-        if (node_handle_.getParam("tip_name", tip_name))
+        if (!node_handle_.getParam("tip_name", tip_name))
         {
             ROS_ERROR("Could not retrieve parameter >>tip<< from the parameter server in the namespace %s.", node_handle_.getNamespace().c_str());
             return false;
         }
         
         // get the urdf model from the parameter server 
-        if (node_handle_.getParam("robot_description", urdf_str))
-        {
-            ROS_ERROR("Could not retrieve parameter >>robot_description<< from the parameter server in the namespace %s.", node_handle_.getNamespace().c_str());
-            return false;
-        }
-        else if (!robot_urdf_.initString(urdf_str))
+        ros::NodeHandle temp_nh("barrett");
+        ROS_VERIFY(usc_utilities::read(temp_nh, "robot_description_yi", urdf_str));
+        if (!robot_urdf_.initString(urdf_str))
         {
             ROS_ERROR("Could not load urdf model from the paramter >>robot_description<< from the paramter server in the namespace %s.", node_handle_.getNamespace().c_str());
             return false;
@@ -148,7 +146,7 @@ namespace wam_dmp_controller
     bool CartesianTwistControllerWithNullspaceOptimization::initNullspacePidControllers()
     {
         std::string null_space_controller_names;
-        if (!node_handle_.getParam("null_space_controller_names", null_space_controller_names))
+        if (!node_handle_.getParam("nullspace_controller_names", null_space_controller_names))
         {
             ROS_ERROR("Could not retrieve parameter >>null_space_controller_names<< from the parameter server in the namespace %s!", node_handle_.getNamespace().c_str());
             return false;
@@ -224,7 +222,6 @@ namespace wam_dmp_controller
         node_handle_ = node_handle;
 
         rest_posture_joint_configuration_ = VectorXd::Zero(NUM_JOINTS, 1);
-
         eigen_desired_cartesian_velocities_ = VectorXd::Zero(NUM_CART, 1);
         eigen_desired_joint_positions_ = VectorXd::Zero(NUM_JOINTS, 1);
         eigen_desired_joint_velocities_ = VectorXd::Zero(NUM_JOINTS, 1);
@@ -251,7 +248,6 @@ namespace wam_dmp_controller
 
         ROS_VERIFY(initCartesianPidControllers());
         ROS_VERIFY(initNullspacePidControllers());
-
         pose_unfiltered_data_.resize(NUM_CART);
         pose_filtered_data_.resize(NUM_CART);
 
@@ -307,6 +303,7 @@ namespace wam_dmp_controller
 
             // Set the desired rest posture to current 
             rest_posture_joint_configuration_(i) = kdl_current_joint_positions_(i);
+            //ROS_INFO("joint position %i: %f", (int)i, kdl_current_joint_positions_(i));
         }
 
         // Set the desired cartesian pose to current value 

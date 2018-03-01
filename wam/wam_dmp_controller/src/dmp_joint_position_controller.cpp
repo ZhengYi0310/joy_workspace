@@ -60,7 +60,7 @@ namespace wam_dmp_controller
             return false;
         }
 
-        ROS_VERIFY(dmp_controller_->initialize(node_handle.getNamespace(), controlled_joint_names));
+        ROS_VERIFY(dmp_controller_->initialize(node_handle.getNamespace(), controlled_joint_names)); 
 
         // initialize member 
         num_joints_ = controlled_joint_names.size();
@@ -81,22 +81,35 @@ namespace wam_dmp_controller
     void DMPJointPositionController::starting(const ros::Time &time)
     {
         ROS_DEBUG("Starting...");
+		
         for (int i = 0; i < static_cast<int>(joint_position_controllers_.size()); i++)
         {
             joint_position_controllers_[i]->starting(time);
             //joint_position_controllers_[i].starting(time);
         }
+	    
+        /*
+        if (dmp_controller_->newDMPReady())
+        {
+            // set start of DMP to current desited position 
+            ROS_VERIFY(dmp_controller_->changeDMPStart(desired_positions_));
+        }
+        */
+        
         holdPositions();
     }
 
     // REAL-TIME REQUIREMENTS
     void DMPJointPositionController::update(const ros::Time &time, const ros::Duration &period)
     {
+         
         if (dmp_controller_->newDMPReady())
         {
             // set start of DMP to current desited position 
             ROS_VERIFY(dmp_controller_->changeDMPStart(desired_positions_));
         }
+        
+        
         if (dmp_controller_->isRunning(desired_positions_, desired_velocities_, desired_accelerations_))
         {
             setDesiredState();
@@ -105,31 +118,36 @@ namespace wam_dmp_controller
         {
             holdPositions();
         }
-
+        
         for (int i = 0; i < static_cast<int>(joint_position_controllers_.size()); i++)
         {
             joint_position_controllers_[i]->update(time, period);
             //joint_position_controllers_[i].update(time, period);
         }
+		
     }
 
     // REAL-TIME REQUIREMENTS
     void DMPJointPositionController::setDesiredState()
     {
+		
         for (int i = 0; i < num_joints_; i++)
         {
             joint_position_controllers_[i]->setCommand(desired_positions_(i)); //desired_velocities_(i) ????
             //joint_position_controllers_[i].setCommand(desired_positions_(i));
         }
+		
     }
     
     void DMPJointPositionController::getDesiredPosition()
     {
+		
         for (int i = 0; i < num_joints_; i++)
         {
             desired_positions_(i) = joint_position_controllers_[i]->getJointPosition();
             //desired_positions_(i) = joint_position_controllers_[i].getJointPosition();
         }
+		
     }
     
     // REAL-TIME REQUIREMENTS

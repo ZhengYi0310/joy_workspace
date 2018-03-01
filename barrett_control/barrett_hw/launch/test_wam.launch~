@@ -45,7 +45,6 @@
   <!--   <remap from="robot_description" to="barrett/robot_description_yi" /> -->
   <!-- </node> --> 
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"> 
-     <!-- <remap from ="joint_states" to="JSP/joint_states" /> -->
      <remap from="robot_description" to="barrett/robot_description_yi" /> 
   </node> 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true"> 
@@ -54,26 +53,28 @@
 
   <param name="barrett/can_dev_name" value="rtcan0"/>
 
+  #<rosparam ns="barrett" file="$(find wam_dmp_controller)/config/wam_joint_position_gains.yaml" command="load"/>
+  
+
   <!-- WAM Server -->
   <node pkg="barrett_hw" type="wam_server" name="wam_server" output="screen"/> 
 
-  <rosparam ns="wam">
+  <rosparam ns="barrett">
     joint_state_controller:
       type: joint_state_controller/JointStateController
-      publish_rate: 50
-    biotac_state_controller:
-      type: barrett_hw/BioTacStateController
       publish_rate: 50
     robot_states_publisher:
       type: barrett_hw/RobotStatesPublisher
       publish_rate: 50
-      tactile: false
+      tactile: true
+    #left_wam/base_yaw_joint:
+    #  type: wam_dmp_controller/JointPositionController
 
   </rosparam>
 
   <node name="default_controller_spawner"
     pkg="controller_manager" type="spawner" output="screen"
-    args="wam/robot_states_publisher wam/joint_state_controller"/>
+    args="barrett/joint_state_controller barrett/robot_states_publisher"/>
 
 
 </launch>
